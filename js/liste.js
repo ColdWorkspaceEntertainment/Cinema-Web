@@ -12,7 +12,7 @@ window.CW_LISTE = [
 window.CW_BILGI = {
   "The 7th Cycle of Death": {
     title: "The 7th Cycle of Death",
-    description: "Buraya açıklama",
+    description: "Şehre düşen bir meteor sonucunda ya kaçmayı seç yada kurtarmayı.",
     year: 2026, genre: "Gizem", featured: true
   }
 };
