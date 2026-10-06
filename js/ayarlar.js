@@ -32,5 +32,6 @@ window.CW_AYAR = {
     { h: "0354427a2ee9a64a95eb7fbce95efe332426314c887fa5b4398d21d4b4cd98b4", seri: "the-7th-cycle-of-death", gun: 30, sonTarih: "2026-10-16" },
     { h: "f14332fe4112fbc32b29d7666c5548fbf0ae00e35cc9dc8e04f8798500c41ef4", seri: "the-7th-cycle-of-death", gun: 30, sonTarih: "2026-10-16" },
     { h: "767143d41f902bc8b3f017dff230b26d6ff669811375ac6987557f6096d78dc5", seri: "the-7th-cycle-of-death", gun: 30, sonTarih: "2026-10-16" },
+    { h: "fff63511f66d1a6d204ddeaa9c303f5b906fb72946dd99e96ae21f5d29025327", seri: "the-7th-cycle-of-death", gun: 30, sonTarih: "275760-02-15", not: "For Efe Ozen" },
   ]
 };
