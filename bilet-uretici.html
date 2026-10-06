@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Bilet kodu üretici</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Figtree:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/ayarlar.js"></script>
+  <script src="js/liste.js"></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body data-sayfa="uretici" class="yukleniyor">
+  <header class="top">
+    <a class="brand" href="index.html"><span class="brand-cw">CW PLAY</span><span class="brand-sub">Sinema</span></a>
+    <nav>
+      <a href="index.html">Salon</a>
+      <a class="btn btn-small" href="bilet.html">Bilet al</a>
+    </nav>
+  </header>
+  <main id="icerik">
+    <section class="admin">
+      <h1>Bilet kodu üretici</h1>
+      <p class="muted">Kodları buradan üret, sonra iki şeyi yap: <b>kodları</b> izleyicilere ver, <b>satırları</b> <code>js/ayarlar.js</code> içindeki <code>biletler</code> listesine yapıştırıp GitHub'a yükle.</p>
+      <div class="admin-grid">
+        <form id="u-form" class="panel form">
+          <label>Adet<input id="u-adet" type="number" min="1" max="100" value="1"></label>
+          <label>Bilet kaç gün geçerli olsun<input id="u-gun" type="number" min="1" max="3650" value="30"></label>
+          <label>Geçerli olduğu seri<select id="u-seri"></select></label>
+          <label>Kodun son kullanma tarihi (isteğe bağlı)<input id="u-son" type="date"></label>
+          <label>Not (kime verildi vb.)<input id="u-not" maxlength="60"></label>
+          <button class="btn" type="submit">Kod üret</button>
+        </form>
+        <div id="u-sonuc" class="panel new-codes" hidden>
+          <h2>1. İzleyicilere verilecek kodlar</h2>
+          <textarea id="u-kodlar" rows="6" readonly></textarea>
+          <button class="btn btn-ghost" type="button" data-copy="u-kodlar">Kodları kopyala</button>
+          <h2 class="mt">2. ayarlar.js'e yapıştırılacak satırlar</h2>
+          <textarea id="u-satirlar" rows="6" readonly></textarea>
+          <button class="btn btn-ghost" type="button" data-copy="u-satirlar">Satırları kopyala</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">© 2026 Cold Works Production™ Media</footer>
+</body>
+</html>
