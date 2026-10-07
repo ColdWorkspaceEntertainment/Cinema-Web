@@ -14,8 +14,9 @@ window.CW_LISTE = [
 window.CW_BILGI = {
   "The 7th Cycle of Death": {
     title: "The 7th Cycle of Death",
-    description: "Şehre düşen bir meteor sonucunda ya kaçmayı seç yada kurtarmayı.",
-    year: 2027, genre: "Gizem"
+    description: "World 93'ten kopan bir meteor aniden World 01'e düşer ve boyutu bitmeyen bir döngüye hapseder. Her şey yeniden başlar, her döngüde ölüm biraz daha yaklaşır. Kurtulmanın tek yolu döngüyü kırmak ve dünyayı eski haline döndürmek.",
+    year: 2027, genre: "Gizem",
+    comingSoon: "2027"
   },
   "The True Feeling of Hearts": {
     title: "The True Feeling of Hearts",
