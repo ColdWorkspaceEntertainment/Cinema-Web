@@ -23,4 +23,10 @@ window.CW_BILGI = {
     description: "....",
     year: 2026, genre: "Bilimkurgu", featured: true
   },
+  "An Exciting Time": {
+    title: "An Exciting Time",
+    description: "Ayrıntılar yakında açıklanacak.",
+    year: ????, genre: "Macera",
+    comingSoon: "Tarih açıklanacak"
+  },
 };
