@@ -15,11 +15,11 @@ window.CW_BILGI = {
   "The 7th Cycle of Death": {
     title: "The 7th Cycle of Death",
     description: "Şehre düşen bir meteor sonucunda ya kaçmayı seç yada kurtarmayı.",
-    year: 2026, genre: "Gizem", featured: true
+    year: 2026, genre: "Gizem"
   },
   "The True Feeling of Hearts": {
     title: "The True Feeling of Hearts",
     description: "....",
-    year: 2026, genre: "Bilimkurgu"
+    year: 2026, genre: "Bilimkurgu", featured: true
   },
 };
