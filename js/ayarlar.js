@@ -7,6 +7,7 @@ window.CW_AYAR = {
 
   // Videoların durduğu klasör (sitenin ana klasörüne göre)
   videoKlasoru: "videos",
+  videoSunucusu: "https://medya.cwplaymusic.com",
 
   // GitHub deposu: doldurursan site videos klasörünü KENDİSİ tarar,
   // yeni video yükleyince hiçbir listeyi güncellemen gerekmez.
