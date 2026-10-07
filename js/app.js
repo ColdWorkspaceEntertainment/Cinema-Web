@@ -5,7 +5,9 @@
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const cmp = (a, b) => a.localeCompare(b, "tr", { numeric: true, sensitivity: "base" });
-  const yol = p => p.split("/").map(encodeURIComponent).join("/");
+  // Videolar başka bir sunucudaysa (ayarlar.js > videoSunucusu) tüm medya oradan gelir
+  const SUNUCU = String(A.videoSunucusu || "").trim().replace(/\/+$/, "");
+  const yol = p => (SUNUCU ? SUNUCU + "/" : "") + p.split("/").map(encodeURIComponent).join("/");
   const params = new URLSearchParams(location.search);
   const VIDEO = /\.(mp4|webm|m4v|mov)$/i, RESIM = /\.(jpe?g|png|webp)$/i;
   const GUN = 864e5;
@@ -25,6 +27,25 @@
 
   // ------------------------------------------------------------ video klasörünü okuma
   async function dosyalar() {
+    if (SUNUCU) {
+      const anahtar = "cw-sunucu-liste";
+      try {
+        const c = JSON.parse(sessionStorage.getItem(anahtar));
+        if (c && Date.now() - c.t < 5 * 60 * 1000) return c.p;
+      } catch {}
+      try {
+        const r = await fetch(SUNUCU + "/liste.php", { cache: "no-store" });
+        if (!r.ok) throw new Error(r.status);
+        const p = (await r.json()).map(x => KLASOR + "/" + String(x).replace(/^\/+/, ""));
+        sessionStorage.setItem(anahtar, JSON.stringify({ t: Date.now(), p }));
+        yaz(anahtar + "-yedek", p);
+        return p;
+      } catch {
+        const y = oku(anahtar + "-yedek", null);
+        if (y) return y;
+        return [];
+      }
+    }
     const g = A.github || {};
     if (g.kullanici && g.depo) {
       const anahtar = "cw-agac";
