@@ -7,12 +7,19 @@
 window.CW_LISTE = [
   "The 7th Cycle of Death/Poster.jpg",
   "The 7th Cycle of Death/Sezon 1/Fragman.MP4",
+  "The True Feeling of Hearts/Poster.jpg",
+  "The True Feeling of Hearts/Sezon 1/Welcome to Home, Luna..MP4",
 ];
 
 window.CW_BILGI = {
   "The 7th Cycle of Death": {
     title: "The 7th Cycle of Death",
-    description: "Şehre düşen bir meteorun ardından ya kaçmayı ya da kurtarmayı seç.",
+    description: "Şehre düşen bir meteor sonucunda ya kaçmayı seç yada kurtarmayı.",
     year: 2026, genre: "Gizem", featured: true
-  }
+  },
+  "The True Feeling of Hearts": {
+    title: "The True Feeling of Hearts",
+    description: "....",
+    year: 2026, genre: "Bilimkurgu"
+  },
 };
