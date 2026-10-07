@@ -96,7 +96,9 @@
         }
       }
       const adlar = Object.keys(sezonlar).sort((a, b) => (a === "" ? -1 : b === "" ? 1 : cmp(a, b)));
-      if (!adlar.length) continue;
+      // Videosu olmayan ama posteri ya da bilgisi olan seri "Yakında" olarak gösterilir
+      const yakinda = !adlar.length;
+      if (yakinda && !poster && !infoVar && !(window.CW_BILGI || {})[klasor]) continue;
 
       let info = (window.CW_BILGI || {})[klasor];
       if (!info && infoVar) {
@@ -119,7 +121,8 @@
       seriler.push({
         slug, klasor, baslik: info.title || klasor, aciklama: info.description || "",
         yil: info.year || "", tur: info.genre || "", yas: info.age || "", one: !!info.featured,
-        poster, banner, sezonlar: sezonListesi, duz
+        poster, banner, sezonlar: sezonListesi, duz,
+        yakinda, cikis: info.comingSoon || ""
       });
     }
     _kutuphane = { seriler, slug: Object.fromEntries(seriler.map(s => [s.slug, s])) };
@@ -132,13 +135,15 @@
   function posterHTML(s) {
     return `<a class="poster" href="seri.html?s=${encodeURIComponent(s.slug)}">
       ${s.poster ? `<img src="${esc(yol(s.poster))}" alt="" loading="lazy">` : `<span class="poster-type">${esc(s.baslik)}</span>`}
-      <span class="poster-cap"><b>${esc(s.baslik)}</b><small>${s.duz.length} bölüm</small></span></a>`;
+      ${s.yakinda ? `<span class="lock">Yakında</span>` : ""}
+      <span class="poster-cap"><b>${esc(s.baslik)}</b><small>${s.yakinda ? esc(s.cikis || "Yakında") : s.duz.length + " bölüm"}</small></span></a>`;
   }
   function heroHTML(s, butonlar) {
     const arka = s.banner ? `<img class="hero-bg" src="${esc(yol(s.banner))}" alt="">`
       : s.poster ? `<img class="hero-bg hero-bg-blur" src="${esc(yol(s.poster))}" alt="">` : "";
     const meta = [s.yil, s.tur].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")
-      + (s.yas ? `<span class="age">${esc(s.yas)}</span>` : "") + `<span>${s.duz.length} bölüm</span>`;
+      + (s.yas ? `<span class="age">${esc(s.yas)}</span>` : "")
+      + (s.yakinda ? `<span class="soon">Yakında${s.cikis ? " · " + esc(s.cikis) : ""}</span>` : `<span>${s.duz.length} bölüm</span>`);
     return `${arka}<div class="hero-body"><h1 class="hero-title">${esc(s.baslik)}</h1>
       <p class="meta">${meta}</p>${s.aciklama ? `<p class="hero-text">${esc(s.aciklama)}</p>` : ""}
       <div class="actions">${butonlar}</div></div>`;
@@ -157,9 +162,9 @@
     const lib = await kutuphane();
     const ana = $("#icerik");
     if (!lib.seriler.length) return (ana.innerHTML = bos(bosMesaj));
-    const one = lib.seriler.find(s => s.one) || lib.seriler[0];
+    const one = lib.seriler.find(s => s.one) || lib.seriler.find(s => !s.yakinda) || lib.seriler[0];
     let html = `<section class="hero">${heroHTML(one,
-      `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">Bölümleri gör</a>`)}</section>`;
+      `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">${one.yakinda ? "Seriyi incele" : "Bölümleri gör"}</a>`)}</section>`;
 
     const ilr = ilerlemeler();
     const devam = [];
@@ -175,7 +180,9 @@
           <span class="bar"><i data-progress="${(p.pos / p.dur).toFixed(3)}"></i></span>
           <b>${esc(s.baslik)}</b><small>${b.no}. bölüm: ${esc(b.baslik)}</small></a>`).join("")}</div></section>`;
     }
-    html += `<section class="row"><h2>Gösterimdeki seriler</h2><div class="rail">${lib.seriler.map(s => posterHTML(s)).join("")}</div></section>`;
+    const gosterimde = lib.seriler.filter(s => !s.yakinda), yakindakiler = lib.seriler.filter(s => s.yakinda);
+    if (gosterimde.length) html += `<section class="row"><h2>Gösterimdeki seriler</h2><div class="rail">${gosterimde.map(s => posterHTML(s)).join("")}</div></section>`;
+    if (yakindakiler.length) html += `<section class="row"><h2>Yakında</h2><div class="rail">${yakindakiler.map(s => posterHTML(s)).join("")}</div></section>`;
     ana.innerHTML = html;
   };
 
@@ -185,6 +192,10 @@
     const ana = $("#icerik");
     if (!s) return (ana.innerHTML = `<section class="empty"><h1>Seri bulunamadı</h1><a class="btn" href="index.html">Salona dön</a></section>`);
     document.title = `${s.baslik} · ${A.siteAdi}`;
+    if (s.yakinda) {
+      ana.innerHTML = `<section class="hero hero-series">${heroHTML(s, `<span class="soon-big">Çok yakında burada</span>`)}</section>`;
+      return;
+    }
     const ilr = ilerlemeler();
     const izlenen = s.duz.filter(b => ilr[b.yol]).sort((a, b) => ilr[b.yol].t - ilr[a.yol].t)[0];
     let devam = s.duz[0];
