@@ -221,3 +221,5 @@ td form{margin:0}
 [hidden]{display:none!important}
 .ticket input:not(.code){background:#fffaf0;color:#2a1a10;border-color:#c9a97a}
 .ticket-form{width:100%}
+.soon{color:var(--brass-2);font-weight:700}
+.soon-big{font:800 1.6rem var(--display);color:var(--brass-2);letter-spacing:.02em}
