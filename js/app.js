@@ -126,67 +126,12 @@
     return _kutuphane;
   }
 
-  // ------------------------------------------------------------ bilet sistemi
-  const ALFABE = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const normKod = k => String(k || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const ozetHafiza = {};
-
-  // Kodların kendisi sitede yazmaz, sadece yavaş bir özet (PBKDF2) yazar.
-  // Kaynak koda bakan biri geçerli bir kod çıkaramaz.
-  async function kodOzeti(kod) {
-    const n = normKod(kod);
-    if (ozetHafiza[n]) return ozetHafiza[n];
-    if (!window.crypto?.subtle) throw new Error("Tarayıcın güvenli bilet kontrolünü desteklemiyor.");
-    const enc = new TextEncoder();
-    const anahtar = await crypto.subtle.importKey("raw", enc.encode(n), "PBKDF2", false, ["deriveBits"]);
-    const bit = await crypto.subtle.deriveBits(
-      { name: "PBKDF2", salt: enc.encode("cw-sinema-bilet-v1"), iterations: 150000, hash: "SHA-256" }, anahtar, 256);
-    return (ozetHafiza[n] = [...new Uint8Array(bit)].map(b => b.toString(16).padStart(2, "0")).join(""));
-  }
-
-  function yeniKod() {
-    const r = crypto.getRandomValues(new Uint8Array(12));
-    const ham = [...r].map(x => ALFABE[x % 32]).join("");
-    return ham.match(/.{4}/g).join("-");
-  }
-
-  async function kodBul(kod) {
-    if (normKod(kod).length !== 12) return null;
-    const h = await kodOzeti(kod);
-    const t = (A.biletler || []).find(x => x.h === h);
-    if (!t) return null;
-    if (t.sonTarih && Date.parse(t.sonTarih) < Date.now()) return null;
-    return t;
-  }
-
-  async function gecerliBiletler() {
-    const simdi = Date.now();
-    const sonuc = [];
-    for (const b of oku("cw-biletler", [])) {
-      if (!b || typeof b !== "object") continue;
-      if (A.biletKoduGerekli) {
-        const t = await kodBul(b.kod).catch(() => null);
-        if (!t) continue;               // kod silindiyse / sahteyse bilet geçersiz
-        b.seri = t.seri || "all";
-        b.bitis = Math.min(b.alindi + (t.gun || 30) * GUN, b.alindi + 3650 * GUN);
-      } else {
-        b.bitis = b.alindi + (A.ucretsizBiletGun || 30) * GUN;
-        b.seri = "all";
-      }
-      if (!(b.alindi <= simdi + GUN) || b.bitis < simdi) continue;
-      sonuc.push(b);
-    }
-    return sonuc;
-  }
-  const erisimVar = (biletler, slug) => biletler.some(b => b.seri === "all" || b.seri === slug);
-
   // ------------------------------------------------------------ ortak parçalar
   function ilerlemeler() { return oku("cw-ilerleme", {}); }
 
-  function posterHTML(s, acik) {
+  function posterHTML(s) {
     return `<a class="poster" href="seri.html?s=${encodeURIComponent(s.slug)}">
       ${s.poster ? `<img src="${esc(yol(s.poster))}" alt="" loading="lazy">` : `<span class="poster-type">${esc(s.baslik)}</span>`}
-      ${acik ? "" : `<span class="lock">Bilet gerekli</span>`}
       <span class="poster-cap"><b>${esc(s.baslik)}</b><small>${s.duz.length} bölüm</small></span></a>`;
   }
   function heroHTML(s, butonlar) {
@@ -209,14 +154,12 @@
   const sayfalar = {};
 
   sayfalar.salon = async () => {
-    const [lib, biletler] = await Promise.all([kutuphane(), gecerliBiletler()]);
+    const lib = await kutuphane();
     const ana = $("#icerik");
     if (!lib.seriler.length) return (ana.innerHTML = bos(bosMesaj));
     const one = lib.seriler.find(s => s.one) || lib.seriler[0];
-    const acik = erisimVar(biletler, one.slug);
-    let html = `<section class="hero">${heroHTML(one, acik
-      ? `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">Bölümleri gör</a>`
-      : `<a class="btn" href="bilet.html">Bilet al</a>`)}</section>`;
+    let html = `<section class="hero">${heroHTML(one,
+      `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">Bölümleri gör</a>`)}</section>`;
 
     const ilr = ilerlemeler();
     const devam = [];
@@ -232,17 +175,16 @@
           <span class="bar"><i data-progress="${(p.pos / p.dur).toFixed(3)}"></i></span>
           <b>${esc(s.baslik)}</b><small>${b.no}. bölüm: ${esc(b.baslik)}</small></a>`).join("")}</div></section>`;
     }
-    html += `<section class="row"><h2>Gösterimdeki seriler</h2><div class="rail">${lib.seriler.map(s => posterHTML(s, erisimVar(biletler, s.slug))).join("")}</div></section>`;
+    html += `<section class="row"><h2>Gösterimdeki seriler</h2><div class="rail">${lib.seriler.map(s => posterHTML(s)).join("")}</div></section>`;
     ana.innerHTML = html;
   };
 
   sayfalar.seri = async () => {
-    const [lib, biletler] = await Promise.all([kutuphane(), gecerliBiletler()]);
+    const lib = await kutuphane();
     const s = lib.slug[params.get("s")];
     const ana = $("#icerik");
     if (!s) return (ana.innerHTML = `<section class="empty"><h1>Seri bulunamadı</h1><a class="btn" href="index.html">Salona dön</a></section>`);
     document.title = `${s.baslik} · ${A.siteAdi}`;
-    const acik = erisimVar(biletler, s.slug);
     const ilr = ilerlemeler();
     const izlenen = s.duz.filter(b => ilr[b.yol]).sort((a, b) => ilr[b.yol].t - ilr[a.yol].t)[0];
     let devam = s.duz[0];
@@ -250,15 +192,13 @@
       const p = ilr[izlenen.yol];
       devam = p.dur && p.pos / p.dur >= 0.95 && s.duz[izlenen.sira] ? s.duz[izlenen.sira] : izlenen;
     }
-    const buton = acik
-      ? `<a class="btn" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${devam.sira}">${izlenen ? "Devam et" : "İzlemeye başla"}</a>`
-      : `<a class="btn" href="bilet.html?s=${encodeURIComponent(s.slug)}">Bilet al</a><span class="muted">Bu seriyi izlemek için bilet gerekiyor.</span>`;
+    const buton = `<a class="btn" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${devam.sira}">${izlenen ? "Devam et" : "İzlemeye başla"}</a>`;
     let html = `<section class="hero hero-series">${heroHTML(s, buton)}</section>`;
     for (const se of s.sezonlar) {
       html += `<section class="episodes"><h2>${esc(se.ad)}</h2><ol class="ep-list">${se.bolumler.map(b => {
         const p = ilr[b.yol];
-        const link = acik ? `izle.html?s=${encodeURIComponent(s.slug)}&b=${b.sira}` : `bilet.html?s=${encodeURIComponent(s.slug)}`;
-        return `<li><a class="ep${acik ? "" : " ep-locked"}" href="${link}"><span class="ep-num">${b.no}</span>
+        const link = `izle.html?s=${encodeURIComponent(s.slug)}&b=${b.sira}`;
+        return `<li><a class="ep" href="${link}"><span class="ep-num">${b.no}</span>
           <span class="ep-img">${b.kucuk ? `<img src="${esc(yol(b.kucuk))}" alt="" loading="lazy">` : ""}</span>
           <span class="ep-title">${esc(b.baslik)}${p && p.dur ? `<span class="bar"><i data-progress="${(p.pos / p.dur).toFixed(3)}"></i></span>` : ""}</span></a></li>`;
       }).join("")}</ol></section>`;
@@ -267,21 +207,18 @@
   };
 
   sayfalar.izle = async () => {
-    const [lib, biletler] = await Promise.all([kutuphane(), gecerliBiletler()]);
+    const lib = await kutuphane();
     const s = lib.slug[params.get("s")];
     const b = s?.duz[(parseInt(params.get("b"), 10) || 1) - 1];
     if (!s || !b) return location.replace("index.html");
-    if (!erisimVar(biletler, s.slug)) return location.replace(`bilet.html?s=${encodeURIComponent(s.slug)}`);
 
     const sonraki = s.duz[b.sira] || null;
     const sezon = s.sezonlar.find(x => x.bolumler.includes(b));
-    const isim = biletler[0]?.ad || "";
     document.title = `${b.no}. ${b.baslik} · ${s.baslik}`;
     $("#icerik").innerHTML = `<section class="screen">
       <div class="player" id="player-wrap">
         <video id="player" controls playsinline preload="metadata"
           controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture disableremoteplayback></video>
-        <span class="wm" id="wm" aria-hidden="true">${esc(isim)}</span>
         <button class="fs" id="fs" type="button">Tam ekran</button>
         ${sonraki ? `<div class="next-up" id="next-up" hidden><p>Sıradaki: ${sonraki.no}. ${esc(sonraki.baslik)}</p>
           <p class="muted"><span id="next-count">8</span> saniye içinde başlıyor</p>
@@ -296,7 +233,7 @@
     </section>`;
 
     const video = $("#player"), kutu = $("#player-wrap");
-    video.src = yol(b.yol);   // video adresi bilet kontrolünden SONRA verilir
+    video.src = yol(b.yol);
     [video, kutu].forEach(el => el.addEventListener("contextmenu", e => e.preventDefault()));
 
     const ilr = ilerlemeler();
@@ -329,10 +266,6 @@
       if (e.key === " ") { e.preventDefault(); video.paused ? video.play() : video.pause(); }
     });
 
-    const wm = $("#wm");
-    const tasi = () => { wm.style.top = 6 + Math.random() * 78 + "%"; wm.style.left = 4 + Math.random() * 70 + "%"; };
-    tasi(); setInterval(tasi, 15000);
-
     const sk = $("#next-up");
     if (sk) {
       let z = null;
@@ -343,124 +276,6 @@
       });
       $("#next-cancel").addEventListener("click", () => { clearInterval(z); sk.hidden = true; });
     } else video.addEventListener("ended", kaydet);
-  };
-
-  sayfalar.bilet = async () => {
-    const lib = await kutuphane();
-    const form = $("#bilet-form");
-    const kodAlani = $("#kod-alani");
-    if (!A.biletKoduGerekli) kodAlani.remove();
-
-    // koltuk planı
-    const plan = $("#koltuklar");
-    const SIRALAR = "ABCDEFG";
-    plan.innerHTML = [...SIRALAR].map(r => `<div class="seat-row"><span class="seat-label">${r}</span>${
-      Array.from({ length: 12 }, (_, i) => `${i === 6 ? '<span class="aisle"></span>' : ""}<button type="button" class="seat" data-seat="${r}${i + 1}" aria-label="Koltuk ${r}${i + 1}" aria-pressed="false"></button>`).join("")
-    }</div>`).join("");
-    let koltuk = null;
-    plan.addEventListener("click", e => {
-      const k = e.target.closest(".seat");
-      if (!k) return;
-      plan.querySelectorAll(".seat").forEach(x => x.setAttribute("aria-pressed", "false"));
-      k.setAttribute("aria-pressed", "true");
-      koltuk = k.dataset.seat;
-      $("#secilen").textContent = `Seçilen koltuk: ${koltuk}`;
-    });
-
-    const kodInput = $("#kod");
-    kodInput?.addEventListener("input", () => {
-      const ham = normKod(kodInput.value).slice(0, 12);
-      kodInput.value = ham.match(/.{1,4}/g)?.join("-") || "";
-    });
-
-    const hata = m => { const h = $("#hata"); h.textContent = m; h.hidden = !m; };
-
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
-      hata("");
-      const ad = $("#ad").value.trim();
-      if (!ad) return hata("Biletin üzerine yazılacak adı gir.");
-      if (!koltuk) return hata("Salondan bir koltuk seç.");
-
-      let t = { seri: "all", gun: A.ucretsizBiletGun || 30 };
-      if (A.biletKoduGerekli) {
-        const kilit = oku("cw-deneme", { n: 0, t: 0 });
-        if (kilit.n >= 5 && Date.now() - kilit.t < 10 * 60 * 1000) return hata("Çok fazla hatalı deneme yapıldı. 10 dakika sonra tekrar dene.");
-        const btn = form.querySelector("button[type=submit]");
-        btn.disabled = true; btn.textContent = "Kontrol ediliyor…";
-        try { t = await kodBul(kodInput.value); } catch (err) { btn.disabled = false; btn.textContent = "Bileti al"; return hata(err.message); }
-        btn.disabled = false; btn.textContent = "Bileti al";
-        if (!t) {
-          const n = Date.now() - kilit.t > 10 * 60 * 1000 ? 1 : kilit.n + 1;
-          yaz("cw-deneme", { n, t: Date.now() });
-          return hata("Bu bilet kodu geçersiz.");
-        }
-        yaz("cw-deneme", { n: 0, t: 0 });
-      }
-
-      const liste = oku("cw-biletler", []).filter(x => !A.biletKoduGerekli || normKod(x.kod) !== normKod(kodInput.value));
-      const bilet = { ad: ad.slice(0, 40), koltuk, kod: A.biletKoduGerekli ? normKod(kodInput.value) : null, alindi: Date.now() };
-      liste.push(bilet);
-      yaz("cw-biletler", liste);
-      biletGoster(lib, { ...bilet, seri: t.seri || "all", bitis: bilet.alindi + (t.gun || 30) * GUN });
-      biletlerimiCiz(lib);
-    });
-
-    biletlerimiCiz(lib);
-  };
-
-  function seriAdi(lib, seri) { return seri === "all" ? "Tüm seriler" : lib.slug[seri]?.baslik || seri; }
-
-  function biletGoster(lib, b) {
-    const hedef = params.get("s") && (b.seri === "all" || b.seri === params.get("s"))
-      ? `seri.html?s=${encodeURIComponent(params.get("s"))}` : "index.html";
-    $("#basili").innerHTML = `<div class="printed">
-      <div class="printed-main"><span class="muted-dark">${esc(A.siteAdi)}</span>
-        <h2>${esc(seriAdi(lib, b.seri))}</h2>
-        <dl><div><dt>Ad</dt><dd>${esc(b.ad)}</dd></div><div><dt>Koltuk</dt><dd>${esc(b.koltuk)}</dd></div>
-        <div><dt>Geçerlilik</dt><dd>${tarih(b.bitis)}</dd></div></dl></div>
-      <div class="ticket-stub"><span>Giriş</span><b>1</b><span>kişilik</span></div></div>
-      <a class="btn" href="${hedef}">Salona gir</a>`;
-    $("#basili").hidden = false;
-    $("#bilet-form").hidden = true;
-    $("#basili").scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  async function biletlerimiCiz(lib) {
-    const b = await gecerliBiletler();
-    $("#biletlerim").innerHTML = b.length
-      ? `<ul class="passes">${b.map(x => `<li class="pass"><b>${esc(seriAdi(lib, x.seri))}</b>
-          <span>Koltuk ${esc(x.koltuk)} · ${esc(x.ad)}</span><small>${tarih(x.bitis)} tarihine kadar</small></li>`).join("")}</ul>`
-      : `<p class="muted">Henüz bir biletin yok.</p>`;
-  }
-
-  sayfalar.uretici = async () => {
-    const lib = await kutuphane();
-    const sec = $("#u-seri");
-    sec.innerHTML = `<option value="all">Tüm seriler</option>` + lib.seriler.map(s => `<option value="${esc(s.slug)}">${esc(s.baslik)}</option>`).join("");
-    $("#u-form").addEventListener("submit", async e => {
-      e.preventDefault();
-      const adet = Math.max(1, Math.min(100, +$("#u-adet").value || 1));
-      const gun = Math.max(1, Math.min(3650, +$("#u-gun").value || 30));
-      const son = $("#u-son").value;
-      const not = $("#u-not").value.trim().replace(/["\\]/g, "");
-      const btn = e.submitter; btn.disabled = true; btn.textContent = "Üretiliyor…";
-      const kodlar = [], satirlar = [];
-      for (let i = 0; i < adet; i++) {
-        const k = yeniKod();
-        kodlar.push(k);
-        satirlar.push(`    { h: "${await kodOzeti(k)}", seri: "${sec.value}", gun: ${gun}${son ? `, sonTarih: "${son}"` : ""}${not ? `, not: "${not}"` : ""} },`);
-      }
-      btn.disabled = false; btn.textContent = "Kod üret";
-      $("#u-kodlar").value = kodlar.join("\n");
-      $("#u-satirlar").value = satirlar.join("\n");
-      $("#u-sonuc").hidden = false;
-    });
-    document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", async () => {
-      const t = $("#" + b.dataset.copy);
-      try { await navigator.clipboard.writeText(t.value); } catch { t.select(); document.execCommand("copy"); }
-      b.textContent = "Kopyalandı";
-    }));
   };
 
   // ------------------------------------------------------------ başlat
