@@ -129,13 +129,33 @@
     return _kutuphane;
   }
 
+  // ------------------------------------------------------------ bilet sistemi
+  // Kurallar: bilet tek bir seri için, 1 gün geçerli; aktif biletin varken yenisi
+  // alınamaz; bilet bittikten sonra 1 saat yeni bilet alınamaz.
+  const BILET_SURE = 24 * 60 * 60 * 1000;
+  const BEKLEME = 60 * 60 * 1000;
+  const sonBilet = () => { const b = oku("cw-bilet", null); return b && b.seri && b.bitis ? b : null; };
+  const aktifBilet = () => { const b = sonBilet(); return b && b.bitis > Date.now() ? b : null; };
+  const beklemeKalan = () => {
+    const b = sonBilet();
+    if (!b || b.bitis > Date.now()) return 0;
+    return Math.max(0, b.bitis + BEKLEME - Date.now());
+  };
+  const erisim = slug => aktifBilet()?.seri === slug;
+  function sureYaz(ms) {
+    const dk = Math.max(1, Math.ceil(ms / 60000));
+    const sa = Math.floor(dk / 60), kalanDk = dk % 60;
+    return sa ? `${sa} saat${kalanDk ? " " + kalanDk + " dakika" : ""}` : `${dk} dakika`;
+  }
+  const saatli = ms => new Date(ms).toLocaleString("tr-TR", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
+
   // ------------------------------------------------------------ ortak parçalar
   function ilerlemeler() { return oku("cw-ilerleme", {}); }
 
   function posterHTML(s) {
     return `<a class="poster" href="seri.html?s=${encodeURIComponent(s.slug)}">
       ${s.poster ? `<img src="${esc(yol(s.poster))}" alt="" loading="lazy">` : `<span class="poster-type">${esc(s.baslik)}</span>`}
-      ${s.yakinda ? `<span class="lock">Yakında</span>` : ""}
+      ${s.yakinda ? `<span class="lock">Yakında</span>` : erisim(s.slug) ? `<span class="lock lock-ok">Biletin var</span>` : ""}
       <span class="poster-cap"><b>${esc(s.baslik)}</b><small>${s.yakinda ? esc(s.cikis || "Yakında") : s.duz.length + " bölüm"}</small></span></a>`;
   }
   function heroHTML(s, butonlar) {
@@ -164,7 +184,9 @@
     if (!lib.seriler.length) return (ana.innerHTML = bos(bosMesaj));
     const one = lib.seriler.find(s => s.one) || lib.seriler.find(s => !s.yakinda) || lib.seriler[0];
     let html = `<section class="hero">${heroHTML(one,
-      `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">${one.yakinda ? "Seriyi incele" : "Bölümleri gör"}</a>`)}</section>`;
+      one.yakinda || erisim(one.slug)
+        ? `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">${one.yakinda ? "Seriyi incele" : "Bölümleri gör"}</a>`
+        : `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">Bölümleri gör</a><a class="btn btn-ghost" href="bilet.html?s=${encodeURIComponent(one.slug)}">Bilet al</a>`)}</section>`;
 
     const ilr = ilerlemeler();
     const devam = [];
@@ -203,13 +225,19 @@
       const p = ilr[izlenen.yol];
       devam = p.dur && p.pos / p.dur >= 0.95 && s.duz[izlenen.sira] ? s.duz[izlenen.sira] : izlenen;
     }
-    const buton = `<a class="btn" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${devam.sira}">${izlenen ? "Devam et" : "İzlemeye başla"}</a>`;
+    const acik = erisim(s.slug), aktif = aktifBilet();
+    let buton;
+    if (acik) buton = `<a class="btn" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${devam.sira}">${izlenen ? "Devam et" : "İzlemeye başla"}</a>
+      <span class="muted">Biletinin bitmesine ${sureYaz(aktif.bitis - Date.now())} var.</span>`;
+    else if (aktif) buton = `<span class="muted">Aktif biletin ${esc(lib.slug[aktif.seri]?.baslik || "başka bir seri")} için. Bu seriyi izlemek için biletinin bitmesini bekle.</span>`;
+    else if (beklemeKalan()) buton = `<span class="muted">Yeni bilet ${sureYaz(beklemeKalan())} sonra alınabilir.</span>`;
+    else buton = `<a class="btn" href="bilet.html?s=${encodeURIComponent(s.slug)}">Bilet al</a><span class="muted">Bu seriyi izlemek için bilet gerekiyor.</span>`;
     let html = `<section class="hero hero-series">${heroHTML(s, buton)}</section>`;
     for (const se of s.sezonlar) {
       html += `<section class="episodes"><h2>${esc(se.ad)}</h2><ol class="ep-list">${se.bolumler.map(b => {
         const p = ilr[b.yol];
-        const link = `izle.html?s=${encodeURIComponent(s.slug)}&b=${b.sira}`;
-        return `<li><a class="ep" href="${link}"><span class="ep-num">${b.no}</span>
+        const link = acik ? `izle.html?s=${encodeURIComponent(s.slug)}&b=${b.sira}` : `bilet.html?s=${encodeURIComponent(s.slug)}`;
+        return `<li><a class="ep${acik ? "" : " ep-locked"}" href="${link}"><span class="ep-num">${b.no}</span>
           <span class="ep-img">${b.kucuk ? `<img src="${esc(yol(b.kucuk))}" alt="" loading="lazy">` : ""}</span>
           <span class="ep-title">${esc(b.baslik)}${p && p.dur ? `<span class="bar"><i data-progress="${(p.pos / p.dur).toFixed(3)}"></i></span>` : ""}</span></a></li>`;
       }).join("")}</ol></section>`;
@@ -222,6 +250,8 @@
     const s = lib.slug[params.get("s")];
     const b = s?.duz[(parseInt(params.get("b"), 10) || 1) - 1];
     if (!s || !b) return location.replace("index.html");
+    if (!erisim(s.slug)) return location.replace(`bilet.html?s=${encodeURIComponent(s.slug)}`);
+    const bilet = aktifBilet();
 
     const sonraki = s.duz[b.sira] || null;
     const sezon = s.sezonlar.find(x => x.bolumler.includes(b));
@@ -237,7 +267,8 @@
           <button class="btn btn-ghost" id="next-cancel" type="button">İptal</button></div></div>` : ""}
       </div>
       <div class="now"><div><a class="muted" href="seri.html?s=${encodeURIComponent(s.slug)}">${esc(s.baslik)}</a>
-        <h1>${b.no}. ${esc(b.baslik)}</h1></div>
+        <h1>${b.no}. ${esc(b.baslik)}</h1>
+        <p class="muted">Koltuk ${esc(bilet.koltuk)} · Biletinin bitmesine ${sureYaz(bilet.bitis - Date.now())} var</p></div>
         ${sonraki ? `<a class="btn btn-ghost" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${sonraki.sira}">Sonraki bölüm</a>` : ""}</div>
       <ol class="ep-list ep-list-compact">${sezon.bolumler.map(e => `<li><a class="ep${e === b ? " ep-current" : ""}"
         href="izle.html?s=${encodeURIComponent(s.slug)}&b=${e.sira}"><span class="ep-num">${e.no}</span><span class="ep-title">${esc(e.baslik)}</span></a></li>`).join("")}</ol>
@@ -289,8 +320,98 @@
     } else video.addEventListener("ended", kaydet);
   };
 
+  sayfalar.bilet = async () => {
+    const lib = await kutuphane();
+    const seriler = lib.seriler.filter(s => !s.yakinda);
+    const form = $("#bilet-form"), durum = $("#durum");
+    const aktif = aktifBilet(), bekle = beklemeKalan();
+
+    if (aktif) {
+      form.hidden = true;
+      return biletGoster(lib, aktif);
+    }
+    if (bekle) {
+      form.hidden = true;
+      durum.innerHTML = `<h1>Biletinin süresi doldu</h1>
+        <p class="muted">Yeni bir bilet <b>${sureYaz(bekle)}</b> sonra alabilirsin (${saatli(Date.now() + bekle)}).</p>
+        <a class="btn" href="index.html">Salona dön</a>`;
+      durum.hidden = false;
+      return;
+    }
+    if (!seriler.length) {
+      form.hidden = true;
+      durum.innerHTML = `<h1>Gösterimde seri yok</h1><a class="btn" href="index.html">Salona dön</a>`;
+      durum.hidden = false;
+      return;
+    }
+
+    const sec = $("#seri");
+    sec.innerHTML = seriler.map(s => `<option value="${esc(s.slug)}">${esc(s.baslik)}</option>`).join("");
+    if (lib.slug[params.get("s")] && !lib.slug[params.get("s")].yakinda) sec.value = params.get("s");
+
+    const plan = $("#koltuklar");
+    plan.innerHTML = [..."ABCDEFG"].map(r => `<div class="seat-row"><span class="seat-label">${r}</span>${
+      Array.from({ length: 12 }, (_, i) => `${i === 6 ? '<span class="aisle"></span>' : ""}<button type="button" class="seat" data-seat="${r}${i + 1}" aria-label="Koltuk ${r}${i + 1}" aria-pressed="false"></button>`).join("")
+    }</div>`).join("");
+    let koltuk = null;
+    plan.addEventListener("click", e => {
+      const k = e.target.closest(".seat");
+      if (!k) return;
+      plan.querySelectorAll(".seat").forEach(x => x.setAttribute("aria-pressed", "false"));
+      k.setAttribute("aria-pressed", "true");
+      koltuk = k.dataset.seat;
+      $("#secilen").textContent = `Seçilen koltuk: ${koltuk}`;
+    });
+
+    const hata = m => { const h = $("#hata"); h.textContent = m; h.hidden = !m; };
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      hata("");
+      if (aktifBilet() || beklemeKalan()) return location.reload();
+      const ad = $("#ad").value.trim();
+      if (!lib.slug[sec.value]) return hata("Bir seri seç.");
+      if (!ad) return hata("Biletin üzerine yazılacak adı gir.");
+      if (!koltuk) return hata("Salondan bir koltuk seç.");
+      const simdi = Date.now();
+      const b = { seri: sec.value, ad: ad.slice(0, 40), koltuk, alindi: simdi, bitis: simdi + BILET_SURE };
+      yaz("cw-bilet", b);
+      form.hidden = true;
+      biletGoster(lib, b);
+      ustBilet();
+    });
+  };
+
+  function biletGoster(lib, b) {
+    const s = lib.slug[b.seri];
+    const kutu = $("#basili");
+    kutu.innerHTML = `<div class="printed">
+      <div class="printed-main"><span class="muted-dark">${esc(A.siteAdi || "CW PLAY Sinema")}</span>
+        <h2>${esc(s?.baslik || b.seri)}</h2>
+        <dl><div><dt>Ad</dt><dd>${esc(b.ad)}</dd></div><div><dt>Koltuk</dt><dd>${esc(b.koltuk)}</dd></div>
+        <div><dt>Geçerlilik</dt><dd>${saatli(b.bitis)}</dd></div></dl></div>
+      <div class="ticket-stub"><span>Giriş</span><b>1</b><span>kişilik</span></div></div>
+      <p class="muted">Biletinin bitmesine ${sureYaz(b.bitis - Date.now())} var. Bilet bitince 1 saat boyunca yeni bilet alınamaz.</p>
+      <a class="btn" href="seri.html?s=${encodeURIComponent(b.seri)}">Salona gir</a>`;
+    kutu.hidden = false;
+  }
+
+  // Üst menüye bilet butonu (HTML dosyalarına dokunmadan)
+  function ustBilet() {
+    const nav = $(".top nav");
+    if (!nav) return;
+    let a = nav.querySelector('a[href="bilet.html"]');
+    if (!a) {
+      a = document.createElement("a");
+      a.href = "bilet.html";
+      a.className = "btn btn-small";
+      nav.appendChild(a);
+    }
+    a.textContent = aktifBilet() ? "Biletim" : "Bilet al";
+  }
+
   // ------------------------------------------------------------ başlat
   document.addEventListener("DOMContentLoaded", async () => {
+    ustBilet();
     document.querySelectorAll("[data-site-adi]").forEach(el => (el.textContent = A.siteAdi || "CW PLAY Sinema"));
     const s = sayfalar[document.body.dataset.sayfa];
     try { if (s) await s(); }
