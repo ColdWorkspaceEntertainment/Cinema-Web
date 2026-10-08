@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Uygulamayı indir · CW PLAY Sinema</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Figtree:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#150f1d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="CW Sinema">
+  <link rel="apple-touch-icon" href="ikonlar/apple-touch-icon.png">
+  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e3a93b'/%3E%3Cpath d='M26 20 L46 32 L26 44 Z' fill='%23150f1d'/%3E%3C/svg%3E">
+  <script src="js/ayarlar.js"></script>
+  <script src="js/liste.js"></script>
+  <script src="js/app.js" defer></script>
+  <style>
+    .indir{max-width:980px;margin:0 auto;padding:40px var(--pad) 56px;display:grid;gap:40px}
+    .indir-ust{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+    .indir-ust img{width:112px;height:112px;border-radius:26px;box-shadow:0 0 60px rgba(227,169,59,.25)}
+    .indir-ust h1{font-size:clamp(2.4rem,6vw,3.6rem);margin:0}
+    .indir-ust p{margin:6px 0 0;color:var(--muted)}
+    .indir-kutu{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px}
+    .indir-kutu .btn{font-size:1.05rem;padding:14px 28px}
+    .indir-kutu small{color:var(--muted)}
+    .ozellik{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+    .ozellik div{background:var(--velvet);border-radius:16px;padding:20px 22px}
+    .ozellik h2{font-size:1.35rem;margin:0 0 6px}
+    .ozellik p{margin:0;color:var(--muted);font-size:.95rem}
+    .adimlar{background:var(--velvet);border-radius:16px;padding:24px 28px}
+    .adimlar h2{font-size:1.6rem}
+    .adimlar ol{margin:0;padding-left:1.3em;display:grid;gap:10px}
+    .adimlar b{color:var(--glow)}
+    .uyari{border-left:4px solid var(--brass);padding:4px 0 4px 16px;color:var(--muted);margin:18px 0 0}
+    .indir-not{color:var(--muted);font-size:.9rem;margin:0}
+    @media (max-width:600px){.indir-ust{grid-template-columns:1fr}.indir-ust img{width:88px;height:88px}}
+  </style>
+</head>
+<body data-sayfa="indir" class="yukleniyor">
+  <header class="top">
+    <a class="brand" href="index.html"><span class="brand-cw">CW PLAY</span><span class="brand-sub">Sinema</span></a>
+    <nav>
+      <a href="index.html">Salon</a>
+    </nav>
+  </header>
+  <main id="icerik">
+    <section class="indir">
+      <div class="indir-ust">
+        <img src="ikonlar/ikon-512.png" alt="">
+        <div>
+          <h1>CW PLAY Sinema uygulaması</h1>
+          <p>Dizileri kendi penceresinde izle; ne izlediğin Discord durumunda görünsün.</p>
+        </div>
+      </div>
+
+      <div class="indir-kutu">
+        <a class="btn" id="indir-buton" href="https://medya.cwplaymusic.com/indir/CW-PLAY-Sinema.zip" download>Windows için indir</a>
+        <small>Sürüm 1.0 · yaklaşık 1 MB · Windows 10 ve 11</small>
+      </div>
+      <p class="indir-not" id="indir-not" hidden>Bu uygulama şimdilik sadece Windows için. Telefonda siteyi tarayıcı menüsünden "Ana ekrana ekle" ile uygulama gibi kullanabilirsin.</p>
+
+      <div class="ozellik">
+        <div><h2>Discord durumu</h2><p>İzlediğin dizi, bölüm ve kalan süre Discord profilinde görünür.</p></div>
+        <div><h2>Kurulum yok</h2><p>Tek bir dosya. İndir, aç, izlemeye başla.</p></div>
+        <div><h2>Hep güncel</h2><p>Yeni seriler ve bölümler uygulamaya kendiliğinden gelir.</p></div>
+      </div>
+
+      <div class="adimlar">
+        <h2>Nasıl kullanılır</h2>
+        <ol>
+          <li><b>Windows için indir</b> butonuna bas.</li>
+          <li>İnen <b>CW-PLAY-Sinema.zip</b> dosyasına sağ tıkla ve <b>Tümünü ayıkla</b>'yı seç.</li>
+          <li>Çıkan <b>CW PLAY Sinema.exe</b> dosyasını istediğin bir klasöre koy ve çift tıkla.</li>
+          <li>Discord açıksa durumun birkaç saniye içinde görünür.</li>
+        </ol>
+        <p class="uyari">Uygulama yeni olduğu için Windows ilk açılışta "Windows bilgisayarınızı korudu" uyarısı gösterebilir. <b>Ek bilgi</b>'ye, sonra <b>Yine de çalıştır</b>'a bas. Durumun Discord'da görünmesi için Discord ayarlarında <b>Etkinlik Gizliliği &gt; Etkinlik durumunu paylaş</b> açık olmalı.</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    // Windows dışındaki cihazlarda bilgi notu göster
+    if (!/Windows/i.test(navigator.userAgent)) document.getElementById("indir-not").hidden = false;
+  </script>
+  <footer class="foot">© 2026 Cold Works Production™ Media</footer>
+</body>
+</html>
