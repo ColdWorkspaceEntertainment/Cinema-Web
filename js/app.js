@@ -6,7 +6,12 @@
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const cmp = (a, b) => a.localeCompare(b, "tr", { numeric: true, sensitivity: "base" });
   // Videolar başka bir sunucudaysa (ayarlar.js > videoSunucusu) tüm medya oradan gelir
-  const SUNUCU = String(A.videoSunucusu || "").trim().replace(/\/+$/, "");
+  // Discord Activity içinde mi açıldık? (Discord siteyi *.discordsays.com üzerinden açar)
+  const DISCORD = /\.discordsays\.com$/.test(location.hostname);
+  const DISCORD_ID = A.discordId || "1557814775973548144";
+  // Discord içinde dış adreslere doğrudan bağlanılamaz; medya sunucusuna
+  // Developer Portal'daki "/medya" adres eşleştirmesi üzerinden gidilir.
+  const SUNUCU = DISCORD ? "/medya" : String(A.videoSunucusu || "").trim().replace(/\/+$/, "");
   const yol = p => (SUNUCU ? SUNUCU + "/" : "") + p.split("/").map(encodeURIComponent).join("/");
   const params = new URLSearchParams(location.search);
   const VIDEO = /\.(mp4|webm|m4v|mov)$/i, RESIM = /\.(jpe?g|png|webp)$/i;
@@ -409,8 +414,48 @@
     a.textContent = aktifBilet() ? "Biletim" : "Bilet al";
   }
 
+  // ------------------------------------------------------------ Discord Activity
+  // Discord'un verdiği oturum bilgileri sadece ilk sayfanın adresinde gelir;
+  // sayfalar arasında geçerken kaybolmasınlar diye saklanır.
+  function discordBilgileri() {
+    const ANAHTAR = "cw-discord-oturum";
+    const p = new URLSearchParams(location.search);
+    if (p.has("frame_id")) {
+      const sakla = {};
+      for (const [k, v] of p) if (k !== "s" && k !== "b") sakla[k] = v;
+      try { sessionStorage.setItem(ANAHTAR, JSON.stringify(sakla)); } catch {}
+      return location.search;
+    }
+    try {
+      const k = JSON.parse(sessionStorage.getItem(ANAHTAR));
+      if (k) return "?" + new URLSearchParams(k).toString();
+    } catch {}
+    return null;
+  }
+
+  function discordBagla() {
+    if (!DISCORD) return;
+    const arama = discordBilgileri();
+    if (!arama) return;
+    const betik = document.createElement("script");
+    betik.src = "js/discord-sdk.js";
+    betik.onload = async () => {
+      try {
+        const SDK = window.CWDiscord.DiscordSDK;
+        SDK.prototype._getSearch = () => arama;
+        const sdk = new SDK(DISCORD_ID);
+        await sdk.ready();
+        window.cwDiscord = sdk;
+      } catch (err) {
+        console.warn("Discord bağlantısı kurulamadı:", err);
+      }
+    };
+    document.head.appendChild(betik);
+  }
+
   // ------------------------------------------------------------ başlat
   document.addEventListener("DOMContentLoaded", async () => {
+    discordBagla();
     ustBilet();
     document.querySelectorAll("[data-site-adi]").forEach(el => (el.textContent = A.siteAdi || "CW PLAY Sinema"));
     const s = sayfalar[document.body.dataset.sayfa];
