@@ -223,3 +223,8 @@ td form{margin:0}
 .ticket-form{width:100%}
 .soon{color:var(--brass-2);font-weight:700}
 .soon-big{font:800 1.6rem var(--display);color:var(--brass-2);letter-spacing:.02em}
+.lock-ok{color:#9be28f}
+.printed-wrap .muted{margin:0}
+.ticket-form select{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid #c9a97a;background:#fffaf0;color:#2a1a10;font:inherit}
+.ticket-status{max-width:760px}
+.now .muted{margin:6px 0 0}
