@@ -26,7 +26,7 @@ window.CW_BILGI = {
   "An Exciting Time": {
     title: "An Exciting Time",
     description: "Ayrıntılar yakında açıklanacak.",
-    year: ????, genre: "Macera",
+    genre: "Macera",
     comingSoon: "Tarih açıklanacak"
   },
 };
