@@ -412,6 +412,15 @@
       nav.appendChild(a);
     }
     a.textContent = aktifBilet() ? "Biletim" : "Bilet al";
+
+    // Uygulama indirme bağlantısı (Discord içinde ve uygulamanın kendisinde gösterilmez)
+    const uygulamada = !!(window.chrome && window.chrome.webview);
+    if (!DISCORD && !uygulamada && !nav.querySelector('a[href="indir.html"]')) {
+      const i = document.createElement("a");
+      i.href = "indir.html";
+      i.textContent = "Uygulama";
+      nav.insertBefore(i, a);
+    }
   }
 
   // ------------------------------------------------------------ Discord Activity
