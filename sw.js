@@ -4,7 +4,7 @@
 // Videolar ve medya sunucusu hiç önbelleğe alınmaz.
 const ONBELLEK = "cw-sinema-v1";
 const TEMEL = [
-  "./", "./index.html", "./seri.html", "./izle.html", "./bilet.html",
+  "./", "./index.html", "./seri.html", "./izle.html", "./bilet.html", "./indir.html",
   "./css/style.css", "./js/app.js", "./js/ayarlar.js", "./js/liste.js",
   "./manifest.json", "./ikonlar/ikon-192.png", "./ikonlar/ikon-512.png"
 ];
