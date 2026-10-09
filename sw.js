@@ -2,7 +2,9 @@
 // Sayfalar önce internetten alınır (güncellemeler hemen görünsün diye),
 // internet yoksa son kaydedilen kopya gösterilir.
 // Videolar ve medya sunucusu hiç önbelleğe alınmaz.
-const ONBELLEK = "cw-sinema-v1";
+const ONBELLEK = "cw-sinema-v2";
+const BILDIRIM = "https://medya.cwplaymusic.com/bildirim/son.php";
+const SITE = "https://series.cwplaymusic.com/";
 const TEMEL = [
   "./", "./index.html", "./seri.html", "./izle.html", "./bilet.html", "./indir.html",
   "./css/style.css", "./js/app.js", "./js/ayarlar.js", "./js/liste.js",
@@ -37,5 +39,35 @@ self.addEventListener("fetch", e => {
         return cevap;
       })
       .catch(() => caches.match(istek, { ignoreSearch: true }).then(c => c || caches.match("./index.html")))
+  );
+});
+
+// ------------------------------------------------------------ bildirimler
+// Sunucu boş bir bildirim gönderir; içeriği buradan son.php'den okunur.
+self.addEventListener("push", e => {
+  e.waitUntil(
+    fetch(BILDIRIM, { cache: "no-store" })
+      .then(c => c.json())
+      .catch(() => ({ baslik: "CW PLAY Sinema", metin: "Salonda yenilikler var.", adres: SITE, id: 0 }))
+      .then(b => self.registration.showNotification(b.baslik || "CW PLAY Sinema", {
+        body: b.metin || "",
+        icon: "ikonlar/ikon-192.png",
+        badge: "ikonlar/ikon-192.png",
+        tag: "cw-yenilik-" + (b.id || 0),
+        data: { adres: b.adres || SITE }
+      }))
+  );
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const adres = (e.notification.data && e.notification.data.adres) || SITE;
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(pencereler => {
+      for (const p of pencereler) {
+        if (p.url.startsWith(SITE) && "navigate" in p) return p.navigate(adres).then(x => (x || p).focus());
+      }
+      return self.clients.openWindow(adres);
+    })
   );
 });
