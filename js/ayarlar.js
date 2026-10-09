@@ -2,7 +2,7 @@
 //  CW PLAY Sinema - AYARLAR
 // ============================================================
 window.CW_AYAR = {
-  siteAdi: "CW PLAY Sinema",
+  siteAdi: "CW PLAY™ Sinema",
 
   // Videoların durduğu klasörün adı
   videoKlasoru: "videos",
