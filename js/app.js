@@ -74,11 +74,19 @@
     return (window.CW_LISTE || []).map(p => KLASOR + "/" + p.replace(/^\/+/, ""));
   }
 
+  const FRAGMAN_KLASORU = /^(fragman(lar)?|trailers?|teasers?|önizleme|onizleme)$/i;
+  let _kume = new Set();
+  const kucukResim = tam => {
+    const kokAd = tam.replace(/\.[^.]+$/, "");
+    return [".jpg", ".jpeg", ".png", ".webp"].map(e => kokAd + e).find(x => _kume.has(x)) || null;
+  };
+
   let _kutuphane = null;
   async function kutuphane() {
     if (_kutuphane) return _kutuphane;
     const tum = await dosyalar();
     const kume = new Set(tum);
+    _kume = kume;
     const gruplar = {};
     for (const p of tum) {
       const parca = p.slice(KLASOR.length + 1).split("/");
@@ -100,10 +108,13 @@
           (sezonlar[f[0]] ||= []).push(f[0] + "/" + f[1]);
         }
       }
-      const adlar = Object.keys(sezonlar).sort((a, b) => (a === "" ? -1 : b === "" ? 1 : cmp(a, b)));
-      // Videosu olmayan ama posteri ya da bilgisi olan seri "Yakında" olarak gösterilir
+      const tumAdlar = Object.keys(sezonlar).sort((a, b) => (a === "" ? -1 : b === "" ? 1 : cmp(a, b)));
+      // "Fragman" gibi adlı klasörler bölüm değil fragman sayılır
+      const adlar = tumAdlar.filter(a => !FRAGMAN_KLASORU.test(a));
+      const fragmanAdlari = tumAdlar.filter(a => FRAGMAN_KLASORU.test(a));
+      // Bölümü olmayan ama posteri, bilgisi ya da fragmanı olan seri "Yakında" olarak gösterilir
       const yakinda = !adlar.length;
-      if (yakinda && !poster && !infoVar && !(window.CW_BILGI || {})[klasor]) continue;
+      if (yakinda && !fragmanAdlari.length && !poster && !infoVar && !(window.CW_BILGI || {})[klasor]) continue;
 
       let info = (window.CW_BILGI || {})[klasor];
       if (!info && infoVar) {
@@ -115,18 +126,19 @@
       const sezonListesi = adlar.map(ad => {
         const bolumler = sezonlar[ad].sort(cmp).map((rel, i) => {
           const tam = kok + rel;
-          const kokAd = tam.replace(/\.[^.]+$/, "");
-          const kucuk = [".jpg", ".jpeg", ".png", ".webp"].map(e => kokAd + e).find(x => kume.has(x)) || null;
-          const b = { no: i + 1, baslik: temizBaslik(rel.split("/").pop()), yol: tam, kucuk, sezon: ad, seri: slug };
+          const b = { no: i + 1, baslik: temizBaslik(rel.split("/").pop()), yol: tam, kucuk: kucukResim(tam), sezon: ad, seri: slug };
           b.sira = duz.push(b);
           return b;
         });
         return { ad: ad || "Bölümler", bolumler };
       });
+      const fragmanlar = fragmanAdlari.flatMap(ad => sezonlar[ad].sort(cmp)).map((rel, i) => ({
+        no: i + 1, baslik: temizBaslik(rel.split("/").pop()), yol: kok + rel, kucuk: kucukResim(kok + rel), fragman: true, seri: slug
+      }));
       seriler.push({
         slug, klasor, baslik: info.title || klasor, aciklama: info.description || "",
         yil: info.year || "", tur: info.genre || "", yas: info.age || "", one: !!info.featured,
-        poster, banner, sezonlar: sezonListesi, duz,
+        poster, banner, sezonlar: sezonListesi, duz, fragmanlar,
         yakinda, cikis: info.comingSoon || ""
       });
     }
@@ -181,6 +193,13 @@
     : "Seri bulunamadı. js/ayarlar.js içinde GitHub bilgilerini doldur ya da js/liste.js'e videolarını yaz.";
 
   // ------------------------------------------------------------ sayfalar
+  const fragmanHTML = s => s.fragmanlar.length ? `<section class="episodes"><h2>Fragmanlar</h2><ol class="ep-list">${s.fragmanlar.map(f => `
+    <li><a class="ep" href="izle.html?s=${encodeURIComponent(s.slug)}&f=${f.no}"><span class="ep-num">▶</span>
+      <span class="ep-img">${f.kucuk ? `<img src="${esc(yol(f.kucuk))}" alt="" loading="lazy">` : ""}</span>
+      <span class="ep-title">${esc(f.baslik)}</span></a></li>`).join("")}</ol></section>` : "";
+  const fragmanButonu = (s, ghost) => s.fragmanlar.length
+    ? `<a class="btn${ghost ? " btn-ghost" : ""}" href="izle.html?s=${encodeURIComponent(s.slug)}&f=1">Fragmanı izle</a>` : "";
+
   const sayfalar = {};
 
   sayfalar.salon = async () => {
@@ -190,7 +209,7 @@
     const one = lib.seriler.find(s => s.one) || lib.seriler.find(s => !s.yakinda) || lib.seriler[0];
     let html = `<section class="hero">${heroHTML(one,
       one.yakinda || erisim(one.slug)
-        ? `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">${one.yakinda ? "Seriyi incele" : "Bölümleri gör"}</a>`
+        ? `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">${one.yakinda ? "Seriyi incele" : "Bölümleri gör"}</a>${fragmanButonu(one, true)}`
         : `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">Bölümleri gör</a><a class="btn btn-ghost" href="bilet.html?s=${encodeURIComponent(one.slug)}">Bilet al</a>`)}</section>`;
 
     const ilr = ilerlemeler();
@@ -220,7 +239,7 @@
     if (!s) return (ana.innerHTML = `<section class="empty"><h1>Seri bulunamadı</h1><a class="btn" href="index.html">Salona dön</a></section>`);
     document.title = `${s.baslik} · ${A.siteAdi}`;
     if (s.yakinda) {
-      ana.innerHTML = `<section class="hero hero-series">${heroHTML(s, `<span class="soon-big">Çok yakında burada</span>`)}</section>`;
+      ana.innerHTML = `<section class="hero hero-series">${heroHTML(s, `${fragmanButonu(s)}<span class="soon-big">Çok yakında burada</span>`)}</section>${fragmanHTML(s)}`;
       return;
     }
     const ilr = ilerlemeler();
@@ -237,7 +256,7 @@
     else if (aktif) buton = `<span class="muted">Aktif biletin ${esc(lib.slug[aktif.seri]?.baslik || "başka bir seri")} için. Bu seriyi izlemek için biletinin bitmesini bekle.</span>`;
     else if (beklemeKalan()) buton = `<span class="muted">Yeni bilet ${sureYaz(beklemeKalan())} sonra alınabilir.</span>`;
     else buton = `<a class="btn" href="bilet.html?s=${encodeURIComponent(s.slug)}">Bilet al</a><span class="muted">Bu seriyi izlemek için bilet gerekiyor.</span>`;
-    let html = `<section class="hero hero-series">${heroHTML(s, buton)}</section>`;
+    let html = `<section class="hero hero-series">${heroHTML(s, buton)}</section>` + fragmanHTML(s);
     for (const se of s.sezonlar) {
       html += `<section class="episodes"><h2>${esc(se.ad)}</h2><ol class="ep-list">${se.bolumler.map(b => {
         const p = ilr[b.yol];
@@ -253,14 +272,18 @@
   sayfalar.izle = async () => {
     const lib = await kutuphane();
     const s = lib.slug[params.get("s")];
-    const b = s?.duz[(parseInt(params.get("b"), 10) || 1) - 1];
+    const fNo = parseInt(params.get("f"), 10);
+    const fragmanModu = fNo > 0;
+    const b = fragmanModu ? s?.fragmanlar[fNo - 1] : s?.duz[(parseInt(params.get("b"), 10) || 1) - 1];
     if (!s || !b) return location.replace("index.html");
-    if (!erisim(s.slug)) return location.replace(`bilet.html?s=${encodeURIComponent(s.slug)}`);
+    // Fragmanlar biletsiz izlenebilir
+    if (!fragmanModu && !erisim(s.slug)) return location.replace(`bilet.html?s=${encodeURIComponent(s.slug)}`);
     const bilet = aktifBilet();
 
-    const sonraki = s.duz[b.sira] || null;
-    const sezon = s.sezonlar.find(x => x.bolumler.includes(b));
-    document.title = `${b.no}. ${b.baslik} · ${s.baslik}`;
+    const sonraki = fragmanModu ? null : s.duz[b.sira] || null;
+    const sezon = fragmanModu ? { bolumler: s.fragmanlar } : s.sezonlar.find(x => x.bolumler.includes(b));
+    const bagla = e => e.fragman ? `izle.html?s=${encodeURIComponent(s.slug)}&f=${e.no}` : `izle.html?s=${encodeURIComponent(s.slug)}&b=${e.sira}`;
+    document.title = `${fragmanModu ? "Fragman" : b.no + "."} ${b.baslik} · ${s.baslik}`;
     $("#icerik").innerHTML = `<section class="screen">
       <div class="player" id="player-wrap">
         <video id="player" controls playsinline preload="metadata"
@@ -272,11 +295,13 @@
           <button class="btn btn-ghost" id="next-cancel" type="button">İptal</button></div></div>` : ""}
       </div>
       <div class="now"><div><a class="muted" href="seri.html?s=${encodeURIComponent(s.slug)}">${esc(s.baslik)}</a>
-        <h1>${b.no}. ${esc(b.baslik)}</h1>
-        <p class="muted">Koltuk ${esc(bilet.koltuk)} · Biletinin bitmesine ${sureYaz(bilet.bitis - Date.now())} var</p></div>
+        <h1>${fragmanModu ? "Fragman: " : b.no + ". "}${esc(b.baslik)}</h1>
+        ${fragmanModu
+          ? (s.duz.length ? `<p class="muted">${erisim(s.slug) ? `<a href="seri.html?s=${encodeURIComponent(s.slug)}">Bölümlere git</a>` : `Bölümleri izlemek için <a href="bilet.html?s=${encodeURIComponent(s.slug)}">bilet al</a>`}</p>` : `<p class="muted">${s.cikis ? "Çıkış: " + esc(s.cikis) : "Çok yakında"}</p>`)
+          : `<p class="muted">Koltuk ${esc(bilet.koltuk)} · Biletinin bitmesine ${sureYaz(bilet.bitis - Date.now())} var</p>`}</div>
         ${sonraki ? `<a class="btn btn-ghost" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${sonraki.sira}">Sonraki bölüm</a>` : ""}</div>
       <ol class="ep-list ep-list-compact">${sezon.bolumler.map(e => `<li><a class="ep${e === b ? " ep-current" : ""}"
-        href="izle.html?s=${encodeURIComponent(s.slug)}&b=${e.sira}"><span class="ep-num">${e.no}</span><span class="ep-title">${esc(e.baslik)}</span></a></li>`).join("")}</ol>
+        href="${bagla(e)}"><span class="ep-num">${e.no}</span><span class="ep-title">${esc(e.baslik)}</span></a></li>`).join("")}</ol>
     </section>`;
 
     const video = $("#player"), kutu = $("#player-wrap");
@@ -414,13 +439,80 @@
     a.textContent = aktifBilet() ? "Biletim" : "Bilet al";
 
     // Uygulama indirme bağlantısı (Discord içinde ve uygulamanın kendisinde gösterilmez)
-    const uygulamada = !!(window.chrome && window.chrome.webview);
+    const uygulamada = UYGULAMADA;
     if (!DISCORD && !uygulamada && !nav.querySelector('a[href="indir.html"]')) {
       const i = document.createElement("a");
       i.href = "indir.html";
       i.textContent = "Uygulama";
       nav.insertBefore(i, a);
     }
+    if (!nav.querySelector(".bildirim-btn")) bildirimButonu(nav, a);
+  }
+
+  // ------------------------------------------------------------ bildirimler
+  // Yeni seri, bölüm ve fragman eklendiğinde tarayıcı bildirimi gönderilir.
+  const UYGULAMADA = !!(window.chrome && window.chrome.webview);
+  const BILDIRIM_ANAHTARI = A.bildirimAnahtari || "BMRKVJHPBDFDtdad6BOnkgFpgxxAlZ8Pn0E7ZtKo8VgjlwadXodtAL-82NeDGwwFFuf5RLvprVMiC2KHbAes7w0";
+  const BILDIRIM_ADRES = String(A.videoSunucusu || "").trim().replace(/\/+$/, "") + "/bildirim";
+
+  function anahtarCoz(b64) {
+    const s = atob((b64 + "=".repeat((4 - b64.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from(s, c => c.charCodeAt(0));
+  }
+  // text/plain ile gönderilir; böylece tarayıcı ek bir ön izin isteği (preflight) yapmaz
+  const aboneBildir = (abonelik, sil) => fetch(BILDIRIM_ADRES + "/abone.php", {
+    method: "POST", headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ endpoint: abonelik.endpoint, sil: !!sil })
+  });
+
+  async function bildirimButonu(nav, once) {
+    if (DISCORD || UYGULAMADA || !/^https:/.test(BILDIRIM_ADRES)) return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return;
+    const kayit = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 6000))]);
+    if (!kayit || nav.querySelector(".bildirim-btn")) return;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "navbtn bildirim-btn";
+    nav.insertBefore(btn, once);
+    const guncelle = async () => {
+      const ab = await kayit.pushManager.getSubscription();
+      btn.textContent = ab ? "🔔 Bildirimler açık" : "🔔 Bildirimleri aç";
+      btn.title = ab ? "Yeni seri ve bölüm bildirimlerini kapatmak için tıkla" : "Yeni seri ve bölümler eklenince haber al";
+      return ab;
+    };
+    const mevcut = await guncelle();
+    // Abonelik sunucuda kaybolmasın diye günde bir kez yeniden bildirilir
+    if (mevcut && Date.now() - (oku("cw-bildirim-t", 0) || 0) > 864e5) {
+      aboneBildir(mevcut).then(() => yaz("cw-bildirim-t", Date.now())).catch(() => {});
+    }
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        const ab = await kayit.pushManager.getSubscription();
+        if (ab) {
+          if (confirm("Yeni seri ve bölüm bildirimleri kapatılsın mı?")) {
+            await aboneBildir(ab, true).catch(() => {});
+            await ab.unsubscribe();
+          }
+        } else {
+          const izin = await Notification.requestPermission();
+          if (izin !== "granted") {
+            alert("Bildirimlere izin verilmedi. İzni tarayıcının adres çubuğundaki site ayarlarından açabilirsin.");
+          } else {
+            const yeni = await kayit.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: anahtarCoz(BILDIRIM_ANAHTARI) });
+            const c = await aboneBildir(yeni);
+            if (!c.ok) throw new Error("sunucu " + c.status);
+            yaz("cw-bildirim-t", Date.now());
+          }
+        }
+      } catch (err) {
+        alert("Bildirimler açılamadı: " + err.message);
+      }
+      btn.disabled = false;
+      guncelle();
+    });
   }
 
   // ------------------------------------------------------------ Discord Activity
