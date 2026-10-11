@@ -29,8 +29,8 @@ window.CW_BILGI = {
     genre: "Macera",
     comingSoon: "Tarih açıklanacak"
   },
-  "Tidebaggy Corps.": {
-    title: "Tidebaggy Corps.",
+  "Tidebaggy Corps": {
+    title: "Tidebaggy Corps",
     description: "Yıllar sonra, Quantum Earth patladı ve bir evren kesişimine sebep oldu. Bu yeni gezegende bir araştırma fabrikası kuran Tidebaggy, türlü evrenlerden gelmiş ve gelecek kişileri işe alır.",
     genre: "Bilimkurgu, Gerilim",
     comingSoon: "Tarih açıklanacak"
