@@ -41,4 +41,10 @@ window.CW_BILGI = {
     genre: "Aksiyon",
     year: "2026"
   },
+      "STOP": {
+    title: "STOP",
+    description: "İki tarafın uzun çaplı savaşı.",
+    genre: "Aksiyon",
+    year: "2026"
+  },
 };
