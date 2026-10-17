@@ -40,7 +40,6 @@ window.CW_BILGI = {
     description: "....",
     unavailable: true,
     genre: "Aksiyon",
-    year: "----"
   },
   "STOP": {
     title: "STOP",
