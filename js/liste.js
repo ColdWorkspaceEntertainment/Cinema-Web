@@ -35,6 +35,14 @@ window.CW_BILGI = {
     genre: "Bilimkurgu, Gerilim",
     comingSoon: "Tarih açıklanacak"
   },
+  "Aklımda": {
+    title: "Aklımda",
+    description: "....",
+    unavailable: true
+    genre: "Aksiyon",
+    year: "----"
+    
+  },
   "STOP": {
     title: "STOP",
     description: "İki tarafın uzun çaplı savaşı.",
