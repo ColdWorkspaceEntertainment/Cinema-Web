@@ -200,6 +200,46 @@
   const fragmanButonu = (s, ghost) => s.fragmanlar.length
     ? `<a class="btn${ghost ? " btn-ghost" : ""}" href="izle.html?s=${encodeURIComponent(s.slug)}&f=1">Fragmanı izle</a>` : "";
 
+  // ------------------------------------------------------------ "mevcut değil" ekranı
+  // Kaldırılmış bir seri ya da bölüm açılmaya çalışıldığında gösterilir.
+  // İzleyicinin cihazındaki izleme geçmişinden kaldırılan serinin adını bulmaya çalışır.
+  function eskiAd(slug) {
+    for (const yol of Object.keys(ilerlemeler())) {
+      const parca = yol.split("/");
+      if (parca.length > 2 && slugify(parca[1]) === slug) return parca[1];
+    }
+    return "";
+  }
+
+  function mevcutDegil(lib, slug, bolumMu) {
+    const s = lib.slug[slug];
+    const ad = s ? s.baslik : eskiAd(slug);
+    document.title = `İçerik mevcut değil · ${A.siteAdi || "CW PLAY Sinema"}`;
+    const baslik = bolumMu && s ? "Bu bölüm artık mevcut değil" : "Bu içerik artık mevcut değil";
+    const metin = bolumMu && s
+      ? `${esc(ad)} serisinin bu bölümü kaldırıldı ya da adı değişti.`
+      : ad
+        ? `<b>${esc(ad)}</b> artık CW PLAY™ Sinema'da yayınlanmıyor.`
+        : "Aradığın seri ya da bölüm kaldırıldı veya artık CW PLAY™ Sinema'da yayınlanmıyor.";
+    const digerleri = lib.seriler.filter(x => x.slug !== slug).slice(0, 8);
+    $("#icerik").innerHTML = `<section class="yok">
+        <div class="yok-ikon" aria-hidden="true"><span></span></div>
+        <h1>${baslik}</h1>
+        <p class="muted">${metin}</p>
+        <div class="actions">
+          ${bolumMu && s ? `<a class="btn" href="seri.html?s=${encodeURIComponent(s.slug)}">Seriye git</a><a class="btn btn-ghost" href="index.html">Salona dön</a>`
+                         : `<a class="btn" href="index.html">Salona dön</a>`}
+        </div>
+      </section>
+      ${digerleri.length ? `<section class="row"><h2>Bunlara göz atabilirsin</h2><div class="rail">${digerleri.map(x => posterHTML(x)).join("")}</div></section>` : ""}`;
+  }
+
+  // Liste hiç yüklenemediyse (bağlantı sorunu) içeriği "kaldırıldı" sanmamak için
+  function yuklenemedi() {
+    $("#icerik").innerHTML = `<section class="empty"><h1>Salon şu an yüklenemedi</h1>
+      <p class="muted">Bağlantını kontrol edip sayfayı yenile.</p><a class="btn" href="index.html">Salona dön</a></section>`;
+  }
+
   const sayfalar = {};
 
   sayfalar.salon = async () => {
@@ -236,7 +276,7 @@
     const lib = await kutuphane();
     const s = lib.slug[params.get("s")];
     const ana = $("#icerik");
-    if (!s) return (ana.innerHTML = `<section class="empty"><h1>Seri bulunamadı</h1><a class="btn" href="index.html">Salona dön</a></section>`);
+    if (!s) return lib.seriler.length ? mevcutDegil(lib, params.get("s") || "", false) : yuklenemedi();
     document.title = `${s.baslik} · ${A.siteAdi}`;
     if (s.yakinda) {
       ana.innerHTML = `<section class="hero hero-series">${heroHTML(s, `${fragmanButonu(s)}<span class="soon-big">Çok yakında burada</span>`)}</section>${fragmanHTML(s)}`;
@@ -275,7 +315,10 @@
     const fNo = parseInt(params.get("f"), 10);
     const fragmanModu = fNo > 0;
     const b = fragmanModu ? s?.fragmanlar[fNo - 1] : s?.duz[(parseInt(params.get("b"), 10) || 1) - 1];
-    if (!s || !b) return location.replace("index.html");
+    if (!s || !b) {
+      if (!lib.seriler.length) return yuklenemedi();
+      return mevcutDegil(lib, params.get("s") || "", !!s);
+    }
     // Fragmanlar biletsiz izlenebilir
     if (!fragmanModu && !erisim(s.slug)) return location.replace(`bilet.html?s=${encodeURIComponent(s.slug)}`);
     const bilet = aktifBilet();
@@ -415,7 +458,7 @@
     const s = lib.slug[b.seri];
     const kutu = $("#basili");
     kutu.innerHTML = `<div class="printed">
-      <div class="printed-main"><span class="muted-dark">${esc(A.siteAdi || "CW PLAY Sinema")}</span>
+      <div class="printed-main"><span class="muted-dark">${esc(A.siteAdi || "CW PLAY™ Sinema")}</span>
         <h2>${esc(s?.baslik || b.seri)}</h2>
         <dl><div><dt>Ad</dt><dd>${esc(b.ad)}</dd></div><div><dt>Koltuk</dt><dd>${esc(b.koltuk)}</dd></div>
         <div><dt>Geçerlilik</dt><dd>${saatli(b.bitis)}</dd></div></dl></div>
@@ -558,7 +601,7 @@
   document.addEventListener("DOMContentLoaded", async () => {
     discordBagla();
     ustBilet();
-    document.querySelectorAll("[data-site-adi]").forEach(el => (el.textContent = A.siteAdi || "CW PLAY Sinema"));
+    document.querySelectorAll("[data-site-adi]").forEach(el => (el.textContent = A.siteAdi || "CW PLAY™ Sinema"));
     const s = sayfalar[document.body.dataset.sayfa];
     try { if (s) await s(); }
     catch (err) {
