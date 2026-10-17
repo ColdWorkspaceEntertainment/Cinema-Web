@@ -38,7 +38,7 @@ window.CW_BILGI = {
   "Aklımda": {
     title: "Aklımda",
     description: "....",
-    unavailable: true
+    unavailable: true,
     genre: "Aksiyon",
     year: "----"
   },
