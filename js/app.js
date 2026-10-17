@@ -139,7 +139,7 @@
         slug, klasor, baslik: info.title || klasor, aciklama: info.description || "",
         yil: info.year || "", tur: info.genre || "", yas: info.age || "", one: !!info.featured,
         poster, banner, sezonlar: sezonListesi, duz, fragmanlar,
-        yakinda, cikis: info.comingSoon || ""
+        yakinda: yakinda && !info.unavailable, kaldirildi: !!info.unavailable, cikis: info.comingSoon || ""
       });
     }
     _kutuphane = { seriler, slug: Object.fromEntries(seriler.map(s => [s.slug, s])) };
@@ -170,17 +170,17 @@
   function ilerlemeler() { return oku("cw-ilerleme", {}); }
 
   function posterHTML(s) {
-    return `<a class="poster" href="seri.html?s=${encodeURIComponent(s.slug)}">
+    return `<a class="poster${s.kaldirildi ? " poster-off" : ""}" href="seri.html?s=${encodeURIComponent(s.slug)}">
       ${s.poster ? `<img src="${esc(yol(s.poster))}" alt="" loading="lazy">` : `<span class="poster-type">${esc(s.baslik)}</span>`}
-      ${s.yakinda ? `<span class="lock">Yakında</span>` : erisim(s.slug) ? `<span class="lock lock-ok">Biletin var</span>` : ""}
-      <span class="poster-cap"><b>${esc(s.baslik)}</b><small>${s.yakinda ? esc(s.cikis || "Yakında") : s.duz.length + " bölüm"}</small></span></a>`;
+      ${s.kaldirildi ? `<span class="lock lock-off">Mevcut değil</span>` : s.yakinda ? `<span class="lock">Yakında</span>` : erisim(s.slug) ? `<span class="lock lock-ok">Biletin var</span>` : ""}
+      <span class="poster-cap"><b>${esc(s.baslik)}</b><small>${s.kaldirildi ? "Artık mevcut değil" : s.yakinda ? esc(s.cikis || "Yakında") : s.duz.length + " bölüm"}</small></span></a>`;
   }
   function heroHTML(s, butonlar) {
     const arka = s.banner ? `<img class="hero-bg" src="${esc(yol(s.banner))}" alt="">`
       : s.poster ? `<img class="hero-bg hero-bg-blur" src="${esc(yol(s.poster))}" alt="">` : "";
     const meta = [s.yil, s.tur].filter(Boolean).map(x => `<span>${esc(x)}</span>`).join("")
       + (s.yas ? `<span class="age">${esc(s.yas)}</span>` : "")
-      + (s.yakinda ? `<span class="soon">Yakında${s.cikis ? " · " + esc(s.cikis) : ""}</span>` : `<span>${s.duz.length} bölüm</span>`);
+      + (s.kaldirildi ? `<span class="off-tag">Artık mevcut değil</span>` : s.yakinda ? `<span class="soon">Yakında${s.cikis ? " · " + esc(s.cikis) : ""}</span>` : `<span>${s.duz.length} bölüm</span>`);
     return `${arka}<div class="hero-body"><h1 class="hero-title">${esc(s.baslik)}</h1>
       <p class="meta">${meta}</p>${s.aciklama ? `<p class="hero-text">${esc(s.aciklama)}</p>` : ""}
       <div class="actions">${butonlar}</div></div>`;
@@ -215,13 +215,14 @@
     const s = lib.slug[slug];
     const ad = s ? s.baslik : eskiAd(slug);
     document.title = `İçerik mevcut değil · ${A.siteAdi || "CW PLAY Sinema"}`;
+    if (s && s.kaldirildi) bolumMu = false;
     const baslik = bolumMu && s ? "Bu bölüm artık mevcut değil" : "Bu içerik artık mevcut değil";
     const metin = bolumMu && s
       ? `${esc(ad)} serisinin bu bölümü kaldırıldı ya da adı değişti.`
       : ad
         ? `<b>${esc(ad)}</b> artık CW PLAY™ Sinema'da yayınlanmıyor.`
         : "Aradığın seri ya da bölüm kaldırıldı veya artık CW PLAY™ Sinema'da yayınlanmıyor.";
-    const digerleri = lib.seriler.filter(x => x.slug !== slug).slice(0, 8);
+    const digerleri = lib.seriler.filter(x => x.slug !== slug && !x.kaldirildi).slice(0, 8);
     $("#icerik").innerHTML = `<section class="yok">
         <div class="yok-ikon" aria-hidden="true"><span></span></div>
         <h1>${baslik}</h1>
@@ -246,7 +247,7 @@
     const lib = await kutuphane();
     const ana = $("#icerik");
     if (!lib.seriler.length) return (ana.innerHTML = bos(bosMesaj));
-    const one = lib.seriler.find(s => s.one) || lib.seriler.find(s => !s.yakinda) || lib.seriler[0];
+    const one = lib.seriler.find(s => s.one && !s.kaldirildi) || lib.seriler.find(s => !s.yakinda && !s.kaldirildi) || lib.seriler.find(s => !s.kaldirildi) || lib.seriler[0];
     let html = `<section class="hero">${heroHTML(one,
       one.yakinda || erisim(one.slug)
         ? `<a class="btn" href="seri.html?s=${encodeURIComponent(one.slug)}">${one.yakinda ? "Seriyi incele" : "Bölümleri gör"}</a>${fragmanButonu(one, true)}`
@@ -254,7 +255,7 @@
 
     const ilr = ilerlemeler();
     const devam = [];
-    for (const s of lib.seriler) for (const b of s.duz) {
+    for (const s of lib.seriler.filter(x => !x.kaldirildi)) for (const b of s.duz) {
       const p = ilr[b.yol];
       if (p && p.dur && p.pos / p.dur < 0.95) devam.push({ s, b, p });
     }
@@ -266,9 +267,11 @@
           <span class="bar"><i data-progress="${(p.pos / p.dur).toFixed(3)}"></i></span>
           <b>${esc(s.baslik)}</b><small>${b.no}. bölüm: ${esc(b.baslik)}</small></a>`).join("")}</div></section>`;
     }
-    const gosterimde = lib.seriler.filter(s => !s.yakinda), yakindakiler = lib.seriler.filter(s => s.yakinda);
+    const gosterimde = lib.seriler.filter(s => !s.yakinda && !s.kaldirildi), yakindakiler = lib.seriler.filter(s => s.yakinda);
+    const kaldirilanlar = lib.seriler.filter(s => s.kaldirildi);
     if (gosterimde.length) html += `<section class="row"><h2>Gösterimdeki seriler</h2><div class="rail">${gosterimde.map(s => posterHTML(s)).join("")}</div></section>`;
     if (yakindakiler.length) html += `<section class="row"><h2>Yakında</h2><div class="rail">${yakindakiler.map(s => posterHTML(s)).join("")}</div></section>`;
+    if (kaldirilanlar.length) html += `<section class="row"><h2>Artık mevcut değil</h2><div class="rail">${kaldirilanlar.map(s => posterHTML(s)).join("")}</div></section>`;
     ana.innerHTML = html;
   };
 
@@ -278,6 +281,10 @@
     const ana = $("#icerik");
     if (!s) return lib.seriler.length ? mevcutDegil(lib, params.get("s") || "", false) : yuklenemedi();
     document.title = `${s.baslik} · ${A.siteAdi}`;
+    if (s.kaldirildi) {
+      ana.innerHTML = `<section class="hero hero-series">${heroHTML(s, `<span class="soon-big off-big">Bu içerik artık mevcut değil</span>`)}</section>`;
+      return;
+    }
     if (s.yakinda) {
       ana.innerHTML = `<section class="hero hero-series">${heroHTML(s, `${fragmanButonu(s)}<span class="soon-big">Çok yakında burada</span>`)}</section>${fragmanHTML(s)}`;
       return;
@@ -315,7 +322,7 @@
     const fNo = parseInt(params.get("f"), 10);
     const fragmanModu = fNo > 0;
     const b = fragmanModu ? s?.fragmanlar[fNo - 1] : s?.duz[(parseInt(params.get("b"), 10) || 1) - 1];
-    if (!s || !b) {
+    if (!s || !b || s.kaldirildi) {
       if (!lib.seriler.length) return yuklenemedi();
       return mevcutDegil(lib, params.get("s") || "", !!s);
     }
@@ -395,7 +402,7 @@
 
   sayfalar.bilet = async () => {
     const lib = await kutuphane();
-    const seriler = lib.seriler.filter(s => !s.yakinda);
+    const seriler = lib.seriler.filter(s => !s.yakinda && !s.kaldirildi);
     const form = $("#bilet-form"), durum = $("#durum");
     const aktif = aktifBilet(), bekle = beklemeKalan();
 
