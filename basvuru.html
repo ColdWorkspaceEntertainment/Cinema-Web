@@ -18,6 +18,9 @@
   <link rel="apple-touch-icon" href="ikonlar/apple-touch-icon.png">
   <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e3a93b'/%3E%3Cpath d='M26 20 L46 32 L26 44 Z' fill='%23150f1d'/%3E%3C/svg%3E">
+  <script src="js/ayarlar.js"></script>
+  <script src="js/liste.js"></script>
+  <script src="js/app.js" defer></script>
 </head>
 <body data-sayfa="basvuru">
   <header class="top">
@@ -25,6 +28,9 @@
     <nav>
       <a href="index.html">Salon</a>
       <a href="basvuru.html" class="active">Yayın Başvurusu</a>
+      <a href="#" id="btn-uygulama">Uygulama</a>
+      <button type="button" id="btn-bildirim" class="nav-btn">🔔 Bildirimleri aç</button>
+      <a href="#" id="btn-bilet" class="bilet-btn">Bilet al</a>
     </nav>
   </header>
 
@@ -34,7 +40,18 @@
       <p>Projenizi CW PLAY™ Sinema platformunda izleyicilerle buluşturmak için aşağıdaki formu eksiksiz doldurunuz. Başvurular Denetim Ekibimiz tarafından incelenecektir.</p>
     </div>
 
-    <form class="basvuru-formu" action="#" method="POST">
+    <!-- Gönderildi Bildirimi (Form Tamamlandığında Görünür) -->
+    <div id="basari-mesaji" class="basari-kutusu" style="display: none;">
+      <div class="basari-iceriği">
+        <h2>🎉 BAŞVURU E-POSTASI HAZIRLANDI</h2>
+        <p>Proje detaylarınız ve taahhütleriniz e-posta istemcinize aktarılmıştır.</p>
+        <p>Açılan e-posta penceresinden <strong>"Gönder"</strong> butonuna basarak başvurunuzu <strong>noreply@cwplaymusic.com</strong> adresine ulaştırabilirsiniz.</p>
+        <a href="index.html" class="gonder-buton" style="display:inline-block; text-align:center; text-decoration:none; margin-top:20px; width:auto; padding: 10px 25px;">Salona Dön</a>
+      </div>
+    </div>
+
+    <!-- Başvuru Formu -->
+    <form id="basvuruFormu" class="basvuru-formu">
       
       <!-- Bölüm 1: Yapımcı & Ekip Bilgileri -->
       <fieldset>
@@ -67,17 +84,17 @@
 
         <div class="form-grup">
           <label for="proje_adi">Proje / Dizi / Film Adı <span class="zorunlu">*</span></label>
-          <input type="text" id="proje_adi" name="proje_adi" placeholder="Örn: Sevgili Günlüğüm" required>
+          <input type="text" id="proje_adi" name="proje_adi" placeholder="Örn: Proje / Dizi / Film Adı" required>
         </div>
 
         <div class="form-grup">
           <label for="proje_turu">Proje Türü <span class="zorunlu">*</span></label>
           <select id="proje_turu" name="proje_turu" required>
             <option value="" disabled selected>Tür seçiniz...</option>
-            <option value="animasyon">Animasyon Dizisi / Kısa Film</option>
-            <option value="dizi">Bağımsız Web Dizisi</option>
-            <option value="film">Bağımsız Kısa/Uzun Metraj Film</option>
-            <option value="diger">Diğer</option>
+            <option value="Animasyon Dizisi / Kısa Film">Animasyon Dizisi / Kısa Film</option>
+            <option value="Bağımsız Web Dizisi">Bağımsız Web Dizisi</option>
+            <option value="Bağımsız Kısa/Uzun Metraj Film">Bağımsız Kısa/Uzun Metraj Film</option>
+            <option value="Diğer">Diğer</option>
           </select>
         </div>
 
@@ -123,10 +140,60 @@
         </div>
       </fieldset>
 
-      <button type="submit" class="gonder-buton">Başvuruyu Gönder</button>
+      <button type="submit" class="gonder-buton">Başvuruyu E-Posta ile Gönder</button>
     </form>
   </main>
 
   <footer class="foot">© 2026 Cold Works Production™ Media</footer>
+
+  <!-- Mailto Mantığı JavaScript -->
+  <script>
+    document.getElementById('basvuruFormu').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const ekip = document.getElementById('ekip_adi').value;
+      const eposta = document.getElementById('eposta').value;
+      const temsilci = document.getElementById('temsilci').value;
+      const sosyal = document.getElementById('sosyal_medya').value || 'Belirtilmedi';
+      const proje = document.getElementById('proje_adi').value;
+      const tur = document.getElementById('proje_turu').value;
+      const ozet = document.getElementById('ozet').value;
+      const link = document.getElementById('proje_link').value;
+      const bolum = document.getElementById('bolum_sayisi').value || 'Belirtilmedi';
+
+      const konu = encodeURIComponent(`[CW PLAY Sinema Başvurusu] ${proje} - ${ekip}`);
+      
+      const govde = encodeURIComponent(
+        `CW PLAY™ SİNEMA YAYIN BAŞVURUSU\n` +
+        `========================================\n\n` +
+        `1. YAPIMCI & EKİP BİLGİLERİ\n` +
+        `----------------------------------------\n` +
+        `Ekip/Stüdyo Adı : ${ekip}\n` +
+        `E-Posta         : ${eposta}\n` +
+        `Temsilci        : ${temsilci}\n` +
+        `Sosyal Medya/Web: ${sosyal}\n\n` +
+        `2. PROJE DETAYLARI\n` +
+        `----------------------------------------\n` +
+        `Proje Adı       : ${proje}\n` +
+        `Proje Türü      : ${tur}\n` +
+        `Ön İzleme Linki : ${link}\n` +
+        `Bölüm/Süre      : ${bolum}\n\n` +
+        `Proje Özeti     :\n${ozet}\n\n` +
+        `3. BEYANLAR & ONAYLAR\n` +
+        `----------------------------------------\n` +
+        `[X] Unvan Beyanı Onaylandı (Resmi şirket değildir, bağımsız üreticidir)\n` +
+        `[X] Telif Beyanı Onaylandı (Görsel/Ses/Müzik hakları ve lisansları mevcuttur)\n` +
+        `[X] Denetim Şartı Onaylandı (Denetim Ekibi inceleme yetkisi kabul edildi)\n`
+      );
+
+      // Mailto istemcisini tetikle
+      window.location.href = `mailto:noreply@cwplaymusic.com?subject=${konu}&body=${govde}`;
+
+      // Formu gizle ve başarı kutusunu göster
+      document.getElementById('basvuruFormu').style.display = 'none';
+      document.getElementById('basari-mesaji').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  </script>
 </body>
 </html>
