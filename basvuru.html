@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Yayın Başvurusu - CW PLAY Sinema</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Figtree:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#150f1d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="CW Sinema">
+  <link rel="apple-touch-icon" href="ikonlar/apple-touch-icon.png">
+  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e3a93b'/%3E%3Cpath d='M26 20 L46 32 L26 44 Z' fill='%23150f1d'/%3E%3C/svg%3E">
+</head>
+<body data-sayfa="basvuru">
+  <header class="top">
+    <a class="brand" href="index.html"><span class="brand-cw">CW PLAY</span><span class="brand-sub">Sinema</span></a>
+    <nav>
+      <a href="index.html">Salon</a>
+      <a href="basvuru.html" class="active">Yayın Başvurusu</a>
+    </nav>
+  </header>
+
+  <main id="icerik" class="form-konteyner">
+    <div class="baslik-alani">
+      <h1>CW PLAY™ SİNEMA YAYIN BAŞVURUSU</h1>
+      <p>Projenizi CW PLAY™ Sinema platformunda izleyicilerle buluşturmak için aşağıdaki formu eksiksiz doldurunuz. Başvurular Denetim Ekibimiz tarafından incelenecektir.</p>
+    </div>
+
+    <form class="basvuru-formu" action="#" method="POST">
+      
+      <!-- Bölüm 1: Yapımcı & Ekip Bilgileri -->
+      <fieldset>
+        <legend>1. Yapımcı & Ekip Bilgileri</legend>
+        
+        <div class="form-grup">
+          <label for="ekip_adi">Ekip / Stüdyo / İsim <span class="zorunlu">*</span></label>
+          <input type="text" id="ekip_adi" name="ekip_adi" placeholder="Örn: Studio Nova veya Ad Soyad" required>
+        </div>
+
+        <div class="form-grup">
+          <label for="eposta">İletişim E-Posta Adresi <span class="zorunlu">*</span></label>
+          <input type="email" id="eposta" name="eposta" placeholder="ornek@domain.com" required>
+        </div>
+
+        <div class="form-grup">
+          <label for="temsilci">Sorumlu Kişi / Temsilci Ad Soyad <span class="zorunlu">*</span></label>
+          <input type="text" id="temsilci" name="temsilci" placeholder="İletişim kurulacak yetkili kişi" required>
+        </div>
+
+        <div class="form-grup">
+          <label for="sosyal_medya">Sosyal Medya / Web Sitesi / YouTube <span class="opsiyonel">(Opsiyonel)</span></label>
+          <input type="url" id="sosyal_medya" name="sosyal_medya" placeholder="https://...">
+        </div>
+      </fieldset>
+
+      <!-- Bölüm 2: Proje & İçerik Detayları -->
+      <fieldset>
+        <legend>2. Proje Detayları</legend>
+
+        <div class="form-grup">
+          <label for="proje_adi">Proje / Dizi / Film Adı <span class="zorunlu">*</span></label>
+          <input type="text" id="proje_adi" name="proje_adi" placeholder="Örn: Sevgili Günlüğüm" required>
+        </div>
+
+        <div class="form-grup">
+          <label for="proje_turu">Proje Türü <span class="zorunlu">*</span></label>
+          <select id="proje_turu" name="proje_turu" required>
+            <option value="" disabled selected>Tür seçiniz...</option>
+            <option value="animasyon">Animasyon Dizisi / Kısa Film</option>
+            <option value="dizi">Bağımsız Web Dizisi</option>
+            <option value="film">Bağımsız Kısa/Uzun Metraj Film</option>
+            <option value="diger">Diğer</option>
+          </select>
+        </div>
+
+        <div class="form-grup">
+          <label for="ozet">Proje Özeti / Konusu <span class="zorunlu">*</span></label>
+          <textarea id="ozet" name="ozet" rows="4" placeholder="Projenizin kısaca konusu, hedef kitlesi ve detayları..." required></textarea>
+        </div>
+
+        <div class="form-grup">
+          <label for="proje_link">İçerik / Ön İzleme / Bölüm Linki <span class="zorunlu">*</span></label>
+          <input type="url" id="proje_link" name="proje_link" placeholder="Google Drive, Mega, Vimeo vb. ön izleme bağlantısı" required>
+        </div>
+
+        <div class="form-grup">
+          <label for="bolum_sayisi">Tahmini Bölüm / Süre Bilgisi <span class="opsiyonel">(Opsiyonel)</span></label>
+          <input type="text" id="bolum_sayisi" name="bolum_sayisi" placeholder="Örn: 10 Bölüm (Her bölüm ~5-10 dk)">
+        </div>
+      </fieldset>
+
+      <!-- Bölüm 3: Yasal Beyanlar ve Onaylar -->
+      <fieldset>
+        <legend>3. Hukuki Beyanlar & Yayın Şartları</legend>
+
+        <div class="onay-kutusu">
+          <input type="checkbox" id="onay_unvan" name="onay_unvan" required>
+          <label for="onay_unvan">
+            <strong>Unvan Beyanı:</strong> Resmi vergi kaydı, ticari tescili ve şirket yapısı bulunmayan bir ekip/kişi olduğumu; kendimi ve ekibimi resmi "A.Ş.", "LTD. ŞTİ." veya "Şirket" olarak lanse etmeyeceğimi, platformda bağımsız stüdyo/üretici olarak yer alacağımı onaylıyorum. <span class="zorunlu">*</span>
+          </label>
+        </div>
+
+        <div class="onay-kutusu">
+          <input type="checkbox" id="onay_telif" name="onay_telif" required>
+          <label for="onay_telif">
+            <strong>Telif Beyanı:</strong> Sunduğum içerikte kullanılan tüm görsellerin, seslerin, seslendirmelerin ve <u>müziklerin</u> telif haklarının tarafıma ait olduğunu veya lisanslı/telifsiz kullanıma uygun olduğunu; izinsiz materyal kullanımından doğacak tüm yasal sorumluluğun tarafıma ait olduğunu kabul ediyorum. <span class="zorunlu">*</span>
+          </label>
+        </div>
+
+        <div class="onay-kutusu">
+          <input type="checkbox" id="onay_denetim" name="onay_denetim" required>
+          <label for="onay_denetim">
+            <strong>Denetim ve İnceleme Şartı:</strong> CW PLAY™ Sinema Denetim Ekibi'nin içeriği teknik, kalite ve topluluk standartları yönünden inceleme ve yayınlayıp yayınlamama hakkına sahip olduğunu kabul ediyorum. <span class="zorunlu">*</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="gonder-buton">Başvuruyu Gönder</button>
+    </form>
+  </main>
+
+  <footer class="foot">© 2026 Cold Works Production™ Media</footer>
+</body>
+</html>
