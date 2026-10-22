@@ -1,215 +1,109 @@
-<!doctype html>
-<html lang="tr">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Yayın Başvurusu - CW PLAY Sinema</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Figtree:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#150f1d">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="CW Sinema">
-  <link rel="apple-touch-icon" href="ikonlar/apple-touch-icon.png">
-  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23e3a93b'/%3E%3Cpath d='M26 20 L46 32 L26 44 Z' fill='%23150f1d'/%3E%3C/svg%3E">
-  <script src="js/ayarlar.js"></script>
-  <script src="js/liste.js"></script>
-  <script src="js/app.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apply — CW PLAY Cinema</title>
+<style>
+  :root { --bg: #0d1117; --card: #161b22; --line: #2d333b; --text: #e6edf3; --muted: #9aa5b1; --accent: #2e8b57; --accent-2: #3ddc84; --err: #ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(1200px 500px at 50% -10%, #12324a, var(--bg)); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 48px 20px 64px; }
+  .kicker { color: var(--accent-2); font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  h1 { margin: 6px 0 8px; font-size: clamp(28px, 6vw, 40px); line-height: 1.15; }
+  .lead { color: var(--muted); margin: 0 0 24px; }
+  .steps { display: grid; gap: 8px; margin: 0 0 24px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, 0.03); color: var(--muted); font-size: 15px; }
+  .steps b { color: var(--text); }
+  form, .done { display: grid; gap: 14px; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); }
+  label { display: grid; gap: 6px; font-weight: 600; font-size: 14px; }
+  label small { color: var(--muted); font-weight: 400; }
+  input, textarea { width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; background: #0d1117; color: var(--text); font: inherit; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+  textarea { min-height: 120px; resize: vertical; }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; color: var(--muted); }
+  .check input { width: auto; margin-top: 5px; }
+  .check a, .done a.link { color: var(--accent-2); }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .btn { display: inline-flex; justify-content: center; align-items: center; min-height: 48px; padding: 10px 22px; border: 0; border-radius: 999px; background: var(--accent); color: #fff; font: 700 16px/1 inherit; text-decoration: none; cursor: pointer; }
+  .btn:hover { background: #26784a; }
+  .btn:disabled { opacity: 0.6; cursor: wait; }
+  .err { min-height: 1.2em; margin: 0; color: var(--err); font-size: 14px; }
+  .done h2 { margin: 0; }
+  .done p { margin: 0; color: var(--muted); }
+  .no { font-family: ui-monospace, Consolas, monospace; color: var(--text); }
+</style>
 </head>
-<body data-sayfa="basvuru">
-  <header class="top">
-    <a class="brand" href="index.html"><span class="brand-cw">CW PLAY</span><span class="brand-sub">Sinema</span></a>
-    <nav>
-      <a href="index.html">Salon</a>
-      <a href="basvuru.html" class="active">Yayın Başvurusu</a>
-    </nav>
-  </header>
+<body>
+<main>
+  <span class="kicker">CW PLAY Cinema</span>
+  <h1>Apply for a screening</h1>
+  <p class="lead">Want your film or series shown at CW PLAY Cinema? Tell us about it.</p>
+  <div class="steps">
+    <span><b>1.</b> Send this application. We'll email you a confirmation.</span>
+    <span><b>2.</b> Buy the <b>CW PLAY Cinema Screening</b> product in our store to complete it.</span>
+    <span><b>3.</b> Your screening details and a chat with us appear under that order in your wallet.</span>
+  </div>
 
-  <main id="icerik" class="form-konteyner">
-    <div class="baslik-alani">
-      <h1>CW PLAY™ SİNEMA YAYIN BAŞVURUSU</h1>
-      <p>Projenizi CW PLAY™ Sinema platformunda izleyicilerle buluşturmak için aşağıdaki formu eksiksiz doldurunuz. Başvurular Denetim Ekibimiz tarafından incelenecektir.</p>
-    </div>
+  <form id="applyForm" novalidate>
+    <label>Your name <input name="name" maxlength="80" autocomplete="name" required></label>
+    <label>Email <small>We send your confirmation and the purchase link here.</small> <input name="email" type="email" maxlength="120" autocomplete="email" required></label>
+    <label>Discord username <small>(optional)</small> <input name="discord" maxlength="40"></label>
+    <label>Title of your film or series <input name="title" maxlength="120" required></label>
+    <label>Tell us about it <small>Genre, length, number of episodes…</small> <textarea name="details" maxlength="2000" required></textarea></label>
+    <label>Link <small>(optional, e.g. a trailer)</small> <input name="link" type="url" maxlength="500" placeholder="https://"></label>
+    <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <label class="check"><input type="checkbox" name="agree" required> <span>I agree to the <a href="https://fizzy.coldworksproduction.com/terms/" target="_blank" rel="noopener">Terms of Use</a> and <a href="https://fizzy.coldworksproduction.com/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+    <p class="err" id="applyErr" role="alert"></p>
+    <button class="btn" type="submit" id="applyBtn">Send application</button>
+  </form>
 
-    <!-- Gönderildi Bildirimi (Form Tamamlandığında Görünür) -->
-    <div id="basari-mesaji" class="basari-kutusu" style="display: none;">
-      <div class="basari-iceriği">
-        <h2>🎉 BAŞVURUNUZ ALINDI</h2>
-        <p>Başvurunuz Denetim Ekibimize iletildi. Başvurunun alındığını bildiren bir e-posta <strong id="basari-eposta">e-posta</strong> adresine gönderildi.</p>
-        <p>İnceleme tamamlandığında sonucu aynı adres üzerinden size bildireceğiz.</p>
-        <a href="index.html" class="gonder-buton" style="display:inline-block; text-align:center; text-decoration:none; margin-top:20px; width:auto; padding: 10px 25px;">Salona Dön</a>
-      </div>
-    </div>
+  <div class="done" id="applyDone" hidden>
+    <h2>Application sent 🎬</h2>
+    <p>Your application number is <span class="no" id="applyNo"></span>. We emailed you a confirmation.</p>
+    <p><b>To complete your application, buy the CW PLAY Cinema Screening product:</b></p>
+    <a class="btn" id="applyBuy" href="https://cwplaymusic.com/product.html?item=cinema-screening">Buy CW PLAY Cinema Screening</a>
+    <p>After the purchase, follow your screening under “My orders” in your <a class="link" href="https://cwplaymusic.com/wallet.html">wallet</a>.</p>
+  </div>
+</main>
 
-    <!-- Başvuru Formu -->
-    <form id="basvuruFormu" class="basvuru-formu">
-
-      <!-- Spam botları için gizli alan; insanlar görmez ve doldurmaz -->
-      <div style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;" aria-hidden="true">
-        <label for="web_adresi">Bu alanı boş bırakın</label>
-        <input type="text" id="web_adresi" name="web_adresi" tabindex="-1" autocomplete="off">
-      </div>
-
-      <!-- Bölüm 1: Yapımcı & Ekip Bilgileri -->
-      <fieldset>
-        <legend>1. Yapımcı & Ekip Bilgileri</legend>
-
-        <div class="form-grup">
-          <label for="ekip_adi">Ekip / Stüdyo / İsim <span class="zorunlu">*</span></label>
-          <input type="text" id="ekip_adi" name="ekip_adi" placeholder="Örn: Studio Nova veya Ad Soyad" maxlength="120" required>
-        </div>
-
-        <div class="form-grup">
-          <label for="eposta">İletişim E-Posta Adresi <span class="zorunlu">*</span></label>
-          <input type="email" id="eposta" name="eposta" placeholder="ornek@domain.com" maxlength="160" required>
-        </div>
-
-        <div class="form-grup">
-          <label for="temsilci">Sorumlu Kişi / Temsilci Ad Soyad <span class="zorunlu">*</span></label>
-          <input type="text" id="temsilci" name="temsilci" placeholder="İletişim kurulacak yetkili kişi" maxlength="120" required>
-        </div>
-
-        <div class="form-grup">
-          <label for="sosyal_medya">Sosyal Medya / Web Sitesi / YouTube <span class="opsiyonel">(Opsiyonel)</span></label>
-          <input type="url" id="sosyal_medya" name="sosyal_medya" placeholder="https://..." maxlength="300">
-        </div>
-      </fieldset>
-
-      <!-- Bölüm 2: Proje & İçerik Detayları -->
-      <fieldset>
-        <legend>2. Proje Detayları</legend>
-
-        <div class="form-grup">
-          <label for="proje_adi">Proje / Dizi / Film Adı <span class="zorunlu">*</span></label>
-          <input type="text" id="proje_adi" name="proje_adi" placeholder="Örn: Proje / Dizi / Film Adı" maxlength="160" required>
-        </div>
-
-        <div class="form-grup">
-          <label for="proje_turu">Proje Türü <span class="zorunlu">*</span></label>
-          <select id="proje_turu" name="proje_turu" required>
-            <option value="" disabled selected>Tür seçiniz...</option>
-            <option value="Animasyon Dizisi / Kısa Film">Animasyon Dizisi / Kısa Film</option>
-            <option value="Bağımsız Web Dizisi">Bağımsız Web Dizisi</option>
-            <option value="Bağımsız Kısa/Uzun Metraj Film">Bağımsız Kısa/Uzun Metraj Film</option>
-            <option value="Diğer">Diğer</option>
-          </select>
-        </div>
-
-        <div class="form-grup">
-          <label for="ozet">Proje Özeti / Konusu <span class="zorunlu">*</span></label>
-          <textarea id="ozet" name="ozet" rows="4" placeholder="Projenizin kısaca konusu, hedef kitlesi ve detayları..." maxlength="4000" required></textarea>
-        </div>
-
-        <div class="form-grup">
-          <label for="proje_link">İçerik / Ön İzleme / Bölüm Linki <span class="zorunlu">*</span></label>
-          <input type="url" id="proje_link" name="proje_link" placeholder="Google Drive, Mega, Vimeo vb. ön izleme bağlantısı" maxlength="500" required>
-        </div>
-
-        <div class="form-grup">
-          <label for="bolum_sayisi">Tahmini Bölüm / Süre Bilgisi <span class="opsiyonel">(Opsiyonel)</span></label>
-          <input type="text" id="bolum_sayisi" name="bolum_sayisi" placeholder="Örn: 10 Bölüm (Her bölüm ~5-10 dk)" maxlength="160">
-        </div>
-      </fieldset>
-
-      <!-- Bölüm 3: Yasal Beyanlar ve Onaylar -->
-      <fieldset>
-        <legend>3. Hukuki Beyanlar & Yayın Şartları</legend>
-
-        <div class="onay-kutusu">
-          <input type="checkbox" id="onay_unvan" name="onay_unvan" required>
-          <label for="onay_unvan">
-            <strong>Unvan Beyanı:</strong> Resmi vergi kaydı, ticari tescili ve şirket yapısı bulunmayan bir ekip/kişi olduğumu; kendimi ve ekibimi resmi "A.Ş.", "LTD. ŞTİ." veya "Şirket" olarak lanse etmeyeceğimi, platformda bağımsız stüdyo/üretici olarak yer alacağımı onaylıyorum. <span class="zorunlu">*</span>
-          </label>
-        </div>
-
-        <div class="onay-kutusu">
-          <input type="checkbox" id="onay_telif" name="onay_telif" required>
-          <label for="onay_telif">
-            <strong>Telif Beyanı:</strong> Sunduğum içerikte kullanılan tüm görsellerin, seslerin, seslendirmelerin ve <u>müziklerin</u> telif haklarının tarafıma ait olduğunu veya lisanslı/telifsiz kullanıma uygun olduğunu; izinsiz materyal kullanımından doğacak tüm yasal sorumluluğun tarafıma ait olduğunu kabul ediyorum. <span class="zorunlu">*</span>
-          </label>
-        </div>
-
-        <div class="onay-kutusu">
-          <input type="checkbox" id="onay_denetim" name="onay_denetim" required>
-          <label for="onay_denetim">
-            <strong>Denetim ve İnceleme Şartı:</strong> CW PLAY™ Sinema Denetim Ekibi'nin içeriği teknik, kalite ve topluluk standartları yönünden inceleme ve yayınlayıp yayınlamama hakkına sahip olduğunu kabul ediyorum. <span class="zorunlu">*</span>
-          </label>
-        </div>
-      </fieldset>
-
-      <p id="form-hata" role="alert" style="display:none; margin:0 0 14px; padding:12px 16px; border-radius:10px; background:#ffe1dc; color:#7a1d12; font-weight:600;"></p>
-      <button type="submit" class="gonder-buton" id="gonder-buton">Başvuruyu Gönder</button>
-    </form>
-  </main>
-
-  <footer class="foot">© 2026 Cold Works Production™ Media</footer>
-
-  <!-- Başvuruyu doğrudan sunucuya gönderir; e-posta programı açılmaz -->
-  <script>
-    (function () {
-      var ADRES = "https://medya.cwplaymusic.com/videos/basvuru/gonder.php";
-      var form = document.getElementById("basvuruFormu");
-      var buton = document.getElementById("gonder-buton");
-      var hataKutusu = document.getElementById("form-hata");
-
-      function hata(mesaj) {
-        hataKutusu.textContent = mesaj;
-        hataKutusu.style.display = mesaj ? "block" : "none";
-      }
-      function deger(id) {
-        return document.getElementById(id).value.trim();
-      }
-
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        hata("");
-        buton.disabled = true;
-        buton.textContent = "Gönderiliyor…";
-
-        var veri = {
-          ekip_adi: deger("ekip_adi"),
-          eposta: deger("eposta"),
-          temsilci: deger("temsilci"),
-          sosyal_medya: deger("sosyal_medya"),
-          proje_adi: deger("proje_adi"),
-          proje_turu: document.getElementById("proje_turu").value,
-          ozet: deger("ozet"),
-          proje_link: deger("proje_link"),
-          bolum_sayisi: deger("bolum_sayisi"),
-          onay_unvan: document.getElementById("onay_unvan").checked,
-          onay_telif: document.getElementById("onay_telif").checked,
-          onay_denetim: document.getElementById("onay_denetim").checked,
-          web_adresi: document.getElementById("web_adresi").value
-        };
-
-        // text/plain ile gönderilir; tarayıcı ek bir ön izin isteği yapmaz
-        fetch(ADRES, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(veri) })
-          .then(function (c) {
-            return c.json().catch(function () { return { hata: "Sunucudan beklenmeyen bir cevap geldi." }; });
-          })
-          .then(function (sonuc) {
-            if (!sonuc || !sonuc.tamam) throw new Error((sonuc && sonuc.hata) || "Başvuru gönderilemedi.");
-            document.getElementById("basari-eposta").textContent = veri.eposta;
-            form.style.display = "none";
-            document.getElementById("basari-mesaji").style.display = "block";
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          })
-          .catch(function (err) {
-            var mesaj = err && err.message && err.message !== "Failed to fetch"
-              ? err.message
-              : "Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip tekrar dene.";
-            hata(mesaj);
-            buton.disabled = false;
-            buton.textContent = "Başvuruyu Gönder";
-          });
+<script>
+(() => {
+  const API = 'https://medya.cwplaymusic.com/fizzy/apply.php';
+  const form = document.getElementById('applyForm');
+  const err = document.getElementById('applyErr');
+  const btn = document.getElementById('applyBtn');
+  const opened = Date.now();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.textContent = '';
+    const d = Object.fromEntries(new FormData(form));
+    if (!d.name.trim() || !d.title.trim()) return void (err.textContent = 'Fill in your name and the title.');
+    if (!/^\S+@\S+\.\S+$/.test(d.email.trim())) return void (err.textContent = 'Enter a valid email address.');
+    if (d.details.trim().length < 10) return void (err.textContent = 'Tell us a little more about it (at least 10 characters).');
+    if (!form.agree.checked) return void (err.textContent = 'Please accept the Terms of Use and Privacy Policy.');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: JSON.stringify({ name: d.name.trim(), email: d.email.trim(), discord: d.discord.trim(), title: d.title.trim(),
+          details: d.details.trim(), link: d.link.trim(), website: d.website, elapsed: Date.now() - opened }),
       });
-    })();
-  </script>
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Your application couldn\'t be sent. Try again.');
+      document.getElementById('applyNo').textContent = data.number || '';
+      if (data.buy) document.getElementById('applyBuy').href = data.buy;
+      form.hidden = true;
+      document.getElementById('applyDone').hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (ex) {
+      err.textContent = ex.message === 'Failed to fetch' ? 'Couldn\'t connect. Check your connection and try again.' : ex.message;
+      btn.disabled = false;
+      btn.textContent = 'Send application';
+    }
+  });
+})();
+</script>
 </body>
 </html>
