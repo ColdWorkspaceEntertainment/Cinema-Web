@@ -21,7 +21,12 @@ window.CW_BILGI = {
   "The True Feeling of Hearts": {
     title: "The True Feeling of Hearts",
     description: "....",
-    year: 2026, genre: "Bilimkurgu", featured: true
+    year: 2026, genre: "Bilimkurgu",
+  },
+  "TTFOH - The Cure Scars": {
+    title: "TTFOH - The Cure Scars",
+    description: "....",
+    year: 2026, genre: "Psikoloji", featured: true
   },
   "An Exciting Life": {
     title: "An Exciting Life",
