@@ -13,6 +13,73 @@
   // Developer Portal'daki "/medya" adres eşleştirmesi üzerinden gidilir.
   const SUNUCU = DISCORD ? "/medya" : String(A.videoSunucusu || "").trim().replace(/\/+$/, "");
   const yol = p => (SUNUCU ? SUNUCU + "/" : "") + p.split("/").map(encodeURIComponent).join("/");
+
+  // ------------------------------------------------------------ CW PLAY Cinema Pass (Fizzy's Store hesabı)
+  // Netflix gibi: giriş yapıp Cinema Pass'i olmayan salona, dizilere ve oynatıcıya giremez.
+  // Discord Activity içinde giriş yapılamadığı için ayarlar.js > discordAcik: false yapılmadıkça orada kapı uygulanmaz.
+  const MEDYA = (SUNUCU || "https://medya.cwplaymusic.com");
+  const UYE_API = MEDYA + "/fizzy/cinema.php", VIDEO_API = MEDYA + "/fizzy/video.php";
+  const MAGAZA = (A.magaza || "https://cwplaymusic.com").replace(/\/+$/, "");
+  const UYE_KEY = "cw-uye", UYE_CACHE = "cw-uye-durum", DONUS = "cw-donus";
+  const KAPI_SAYFALARI = ["salon", "seri", "izle", "bilet"];
+  const KAPI_ACIK = !(DISCORD && A.discordAcik !== false);
+  let UYE = null;
+  const passVar = () => UYE?.durum === "acik";
+  (function uyeYakala() {
+    const m = location.hash.match(/[#&]uye=([^&]+)/);
+    if (!m) return;
+    try { localStorage.setItem(UYE_KEY, decodeURIComponent(m[1])); sessionStorage.removeItem(UYE_CACHE); } catch {}
+    history.replaceState(null, "", location.pathname + location.search);
+    let donus = null;
+    try { donus = JSON.parse(localStorage.getItem(DONUS)); localStorage.removeItem(DONUS); } catch {}
+    if (donus && /^\/[^/]/.test(donus) && !/index\.html$/.test(donus)) location.replace(donus);
+  })();
+  async function uyelik(zorla) {
+    let t = null;
+    try { t = localStorage.getItem(UYE_KEY); } catch {}
+    if (!t) return { durum: "giris" };
+    if (!zorla) {
+      try { const c = JSON.parse(sessionStorage.getItem(UYE_CACHE)); if (c && Date.now() - c.t < 10 * 60 * 1000) return c.d; } catch {}
+    }
+    try {
+      const r = await fetch(UYE_API, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "check", token: t }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 401) { localStorage.removeItem(UYE_KEY); return { durum: "giris" }; }
+      if (r.status === 403) return { durum: "engel", mesaj: j.error };
+      if (!r.ok || !j.ok) return { durum: "hata" };
+      const d = { ...j, durum: j.pass ? "acik" : "pass" };
+      sessionStorage.setItem(UYE_CACHE, JSON.stringify({ t: Date.now(), d }));
+      return d;
+    } catch { return { durum: "hata" }; }
+  }
+  function cikis() {
+    try { localStorage.removeItem(UYE_KEY); sessionStorage.removeItem(UYE_CACHE); } catch {}
+    location.href = "index.html";
+  }
+  function girisAdresi() {
+    yaz(DONUS, location.pathname + location.search);
+    return MAGAZA + "/cinema-login.html";
+  }
+  // Kapı ekranı: giriş yok / Cinema Pass yok / engelli / bağlantı yok
+  function kapi(u) {
+    const buy = u.buy || MAGAZA + "/product.html?item=cinema-pass";
+    const ekran = {
+      giris: ["CW PLAY Sinema'ya hoş geldin", "İzlemek için Fizzy's Store hesabınla (Discord ya da CW PLAY hesabı) giriş yap. Dizileri izlemek için <b>CW PLAY Cinema Pass</b> gerekir.",
+        `<a class="btn" href="${esc(girisAdresi())}">Giriş yap</a><a class="btn btn-ghost" href="${esc(buy)}">Cinema Pass nedir?</a>`],
+      pass: [`Merhaba ${esc(u.name || "")}!`, "Salona girmek için <b>CW PLAY Cinema Pass</b> aboneliği gerekiyor. Pass ile bilet almadan bütün dizileri izleyebilirsin.",
+        `<a class="btn" href="${esc(buy)}">Cinema Pass al</a><button class="btn btn-ghost" id="kapi-yenile" type="button">Pass aldım, yenile</button><button class="navbtn" id="kapi-cikis" type="button">Başka hesapla giriş yap</button>`],
+      engel: ["Giriş yapılamıyor", esc(u.mesaj || "Hesabın CW PLAY Sinema'ya erişemiyor."), `<button class="navbtn" id="kapi-cikis" type="button">Çıkış yap</button>`],
+      hata: ["Salona şu an bağlanılamadı", "Bağlantını kontrol edip tekrar dene.", `<button class="btn" id="kapi-yenile" type="button">Tekrar dene</button>`],
+    }[u.durum] || ["", "", ""];
+    $("#icerik").innerHTML = `<section class="marquee"><div class="marquee-lights" aria-hidden="true"></div>
+      <p class="marquee-kicker">${esc(A.siteAdi || "CW PLAY™ Sinema")}</p><h1 class="marquee-title">${ekran[0]}</h1>
+      <p class="marquee-text">${ekran[1]}</p><div class="actions">${ekran[2]}</div></section>`;
+    $("#kapi-yenile")?.addEventListener("click", async () => { const y = await uyelik(true); if (y.durum === "acik") location.reload(); else kapi(y); });
+    $("#kapi-cikis")?.addEventListener("click", cikis);
+  }
+  // Pass sahiplerine videolar korumalı bağlantıyla (birkaç saatte bir yenilenen bilet) gelir
+  const videoAdres = p => (passVar() && UYE.vt && p.startsWith(KLASOR + "/"))
+    ? `${VIDEO_API}?p=${encodeURIComponent(p.slice(KLASOR.length + 1))}&t=${encodeURIComponent(UYE.vt)}` : yol(p);
   const params = new URLSearchParams(location.search);
   const VIDEO = /\.(mp4|webm|m4v|mov)$/i, RESIM = /\.(jpe?g|png|webp)$/i;
   const GUN = 864e5;
@@ -158,7 +225,7 @@
     if (!b || b.bitis > Date.now()) return 0;
     return Math.max(0, b.bitis + BEKLEME - Date.now());
   };
-  const erisim = slug => aktifBilet()?.seri === slug;
+  const erisim = slug => passVar() || aktifBilet()?.seri === slug;
   function sureYaz(ms) {
     const dk = Math.max(1, Math.ceil(ms / 60000));
     const sa = Math.floor(dk / 60), kalanDk = dk % 60;
@@ -172,7 +239,7 @@
   function posterHTML(s) {
     return `<a class="poster${s.kaldirildi ? " poster-off" : ""}" href="seri.html?s=${encodeURIComponent(s.slug)}">
       ${s.poster ? `<img src="${esc(yol(s.poster))}" alt="" loading="lazy">` : `<span class="poster-type">${esc(s.baslik)}</span>`}
-      ${s.kaldirildi ? `<span class="lock lock-off">Mevcut değil</span>` : s.yakinda ? `<span class="lock">Yakında</span>` : erisim(s.slug) ? `<span class="lock lock-ok">Biletin var</span>` : ""}
+      ${s.kaldirildi ? `<span class="lock lock-off">Mevcut değil</span>` : s.yakinda ? `<span class="lock">Yakında</span>` : (!passVar() && erisim(s.slug)) ? `<span class="lock lock-ok">Biletin var</span>` : ""}
       <span class="poster-cap"><b>${esc(s.baslik)}</b><small>${s.kaldirildi ? "Artık mevcut değil" : s.yakinda ? esc(s.cikis || "Yakında") : s.duz.length + " bölüm"}</small></span></a>`;
   }
   function heroHTML(s, butonlar) {
@@ -299,7 +366,7 @@
     const acik = erisim(s.slug), aktif = aktifBilet();
     let buton;
     if (acik) buton = `<a class="btn" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${devam.sira}">${izlenen ? "Devam et" : "İzlemeye başla"}</a>
-      <span class="muted">Biletinin bitmesine ${sureYaz(aktif.bitis - Date.now())} var.</span>`;
+      <span class="muted">${aktif && !passVar() ? `Biletinin bitmesine ${sureYaz(aktif.bitis - Date.now())} var.` : "Cinema Pass ile izliyorsun."}</span>`;
     else if (aktif) buton = `<span class="muted">Aktif biletin ${esc(lib.slug[aktif.seri]?.baslik || "başka bir seri")} için. Bu seriyi izlemek için biletinin bitmesini bekle.</span>`;
     else if (beklemeKalan()) buton = `<span class="muted">Yeni bilet ${sureYaz(beklemeKalan())} sonra alınabilir.</span>`;
     else buton = `<a class="btn" href="bilet.html?s=${encodeURIComponent(s.slug)}">Bilet al</a><span class="muted">Bu seriyi izlemek için bilet gerekiyor.</span>`;
@@ -348,14 +415,14 @@
         <h1>${fragmanModu ? "Fragman: " : b.no + ". "}${esc(b.baslik)}</h1>
         ${fragmanModu
           ? (s.duz.length ? `<p class="muted">${erisim(s.slug) ? `<a href="seri.html?s=${encodeURIComponent(s.slug)}">Bölümlere git</a>` : `Bölümleri izlemek için <a href="bilet.html?s=${encodeURIComponent(s.slug)}">bilet al</a>`}</p>` : `<p class="muted">${s.cikis ? "Çıkış: " + esc(s.cikis) : "Çok yakında"}</p>`)
-          : `<p class="muted">Koltuk ${esc(bilet.koltuk)} · Biletinin bitmesine ${sureYaz(bilet.bitis - Date.now())} var</p>`}</div>
+          : (bilet && !passVar() ? `<p class="muted">Koltuk ${esc(bilet.koltuk)} · Biletinin bitmesine ${sureYaz(bilet.bitis - Date.now())} var</p>` : `<p class="muted">Cinema Pass · ${esc(UYE?.name || "")}</p>`)}</div>
         ${sonraki ? `<a class="btn btn-ghost" href="izle.html?s=${encodeURIComponent(s.slug)}&b=${sonraki.sira}">Sonraki bölüm</a>` : ""}</div>
       <ol class="ep-list ep-list-compact">${sezon.bolumler.map(e => `<li><a class="ep${e === b ? " ep-current" : ""}"
         href="${bagla(e)}"><span class="ep-num">${e.no}</span><span class="ep-title">${esc(e.baslik)}</span></a></li>`).join("")}</ol>
     </section>`;
 
     const video = $("#player"), kutu = $("#player-wrap");
-    video.src = yol(b.yol);
+    video.src = videoAdres(b.yol);
     [video, kutu].forEach(el => el.addEventListener("contextmenu", e => e.preventDefault()));
 
     const ilr = ilerlemeler();
@@ -401,6 +468,7 @@
   };
 
   sayfalar.bilet = async () => {
+    if (passVar()) return location.replace("index.html"); // Pass sahibi bilete ihtiyaç duymaz
     const lib = await kutuphane();
     const seriler = lib.seriler.filter(s => !s.yakinda && !s.kaldirildi);
     const form = $("#bilet-form"), durum = $("#durum");
@@ -479,14 +547,32 @@
   function ustBilet() {
     const nav = $(".top nav");
     if (!nav) return;
-    let a = nav.querySelector('a[href="bilet.html"]');
+    let a = nav.querySelector('a[href="bilet.html"], .uye-btn');
     if (!a) {
       a = document.createElement("a");
-      a.href = "bilet.html";
       a.className = "btn btn-small";
       nav.appendChild(a);
     }
-    a.textContent = aktifBilet() ? "Biletim" : "Bilet al";
+    if (KAPI_ACIK) {
+      a.classList.add("uye-btn");
+      if (UYE && UYE.name) {
+        a.href = MAGAZA + "/wallet.html";
+        a.textContent = "👤 " + UYE.name;
+        a.title = "Fizzy's Store hesabın";
+        if (!nav.querySelector(".cikis-btn")) {
+          const c = document.createElement("button");
+          c.type = "button"; c.className = "navbtn cikis-btn"; c.textContent = "Çıkış";
+          c.addEventListener("click", cikis);
+          nav.appendChild(c);
+        }
+      } else {
+        a.href = girisAdresi();
+        a.textContent = "Giriş yap";
+      }
+    } else {
+      a.href = "bilet.html";
+      a.textContent = aktifBilet() ? "Biletim" : "Bilet al";
+    }
 
     // Uygulama indirme bağlantısı (Discord içinde ve uygulamanın kendisinde gösterilmez)
     const uygulamada = UYGULAMADA;
@@ -607,6 +693,16 @@
   // ------------------------------------------------------------ başlat
   document.addEventListener("DOMContentLoaded", async () => {
     discordBagla();
+    if (KAPI_ACIK) {
+      const u = await uyelik();
+      if (u.durum === "acik" || u.durum === "pass") UYE = u;
+      if (KAPI_SAYFALARI.includes(document.body.dataset.sayfa) && u.durum !== "acik") {
+        ustBilet();
+        kapi(u);
+        document.body.classList.remove("yukleniyor");
+        return;
+      }
+    }
     ustBilet();
     document.querySelectorAll("[data-site-adi]").forEach(el => (el.textContent = A.siteAdi || "CW PLAY™ Sinema"));
     const s = sayfalar[document.body.dataset.sayfa];
