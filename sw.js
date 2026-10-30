@@ -2,7 +2,7 @@
 // Sayfalar önce internetten alınır (güncellemeler hemen görünsün diye),
 // internet yoksa son kaydedilen kopya gösterilir.
 // Videolar ve medya sunucusu hiç önbelleğe alınmaz.
-const ONBELLEK = "cw-sinema-v2";
+const ONBELLEK = "cw-sinema-v3";
 const BILDIRIM = "https://medya.cwplaymusic.com/bildirim/son.php";
 const SITE = "https://series.cwplaymusic.com/";
 const TEMEL = [
