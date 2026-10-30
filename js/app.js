@@ -405,6 +405,7 @@
       <div class="player" id="player-wrap">
         <video id="player" controls playsinline preload="metadata"
           controlslist="nodownload nofullscreen noremoteplayback" disablepictureinpicture disableremoteplayback></video>
+        <div class="wm" id="wm" aria-hidden="true">CW PLAY Cinema</div>
         <button class="fs" id="fs" type="button">Tam ekran</button>
         ${sonraki ? `<div class="next-up" id="next-up" hidden><p>Sıradaki: ${sonraki.no}. ${esc(sonraki.baslik)}</p>
           <p class="muted"><span id="next-count">8</span> saniye içinde başlıyor</p>
@@ -422,6 +423,29 @@
     </section>`;
 
     const video = $("#player"), kutu = $("#player-wrap");
+    // filigran: "CW PLAY Cinema" yazısı 20 saniyede bir videonun üzerinde başka bir yere kayar
+    const wm = $("#wm");
+    const WM_METIN = "CW PLAY Cinema" + (UYE?.wm ? " · " + UYE.wm : "");
+    wm.textContent = WM_METIN;
+    const kaydir = () => { wm.style.top = (6 + Math.random() * 78) + "%"; wm.style.left = (4 + Math.random() * 70) + "%"; };
+    kaydir();
+    setInterval(kaydir, 20000);
+    // koruma: filigran silinir, gizlenir ya da değiştirilirse video durur ve filigran geri gelir
+    const saglam = () => {
+      const st = getComputedStyle(wm);
+      return wm.isConnected && wm.parentElement === kutu && wm.textContent === WM_METIN && st.display !== "none"
+        && st.visibility !== "hidden" && parseFloat(st.opacity) > 0.05 && wm.offsetWidth > 20;
+    };
+    const onar = () => {
+      if (saglam()) return;
+      video.pause();
+      if (!wm.isConnected || wm.parentElement !== kutu) kutu.appendChild(wm);
+      wm.removeAttribute("style"); wm.className = "wm"; wm.textContent = WM_METIN;
+      kaydir();
+    };
+    new MutationObserver(onar).observe(kutu, { childList: true, subtree: true, attributes: true, characterData: true });
+    setInterval(onar, 1500);
+    video.addEventListener("play", onar);
     video.src = videoAdres(b.yol);
     [video, kutu].forEach(el => el.addEventListener("contextmenu", e => e.preventDefault()));
 
